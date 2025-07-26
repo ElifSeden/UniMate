@@ -2,40 +2,47 @@ import SwiftUI
 import UniformTypeIdentifiers
 import PDFKit
 
-struct PDFSummaryView: View {
-    @State private var pdfText: String = ""
-    @State private var summary: String = ""
-    @State private var isLoading: Bool = false
+
+struct CVScreen: View {
+    @State private var cvText: String = ""
+    @State private var feedback: String = ""
+    @State private var isLoading = false
 
     var body: some View {
-        VStack(spacing: 20) {
-            Button("Select PDF") {
-                showDocumentPicker()
+        NavigationView {
+            VStack(spacing: 20) {
+                Button("Upload CV (PDF)") {
+                    showDocumentPicker()
+                }
+                .padding()
+                .background(Color.purple)
+                .foregroundColor(.white)
+                .cornerRadius(12)
+
+                if isLoading {
+                    ProgressView("Generating feedback...")
+                }
+
+                if !feedback.isEmpty {
+                    ScrollView {
+                        Text(feedback)
+                            .padding()
+                    }
+                }
+
+                Spacer()
             }
             .padding()
-            .background(Color.blue)
-            .foregroundColor(.white)
-            .cornerRadius(12)
-
-            if isLoading {
-                ProgressView("Generating summary...")
-            }
-
-            if !summary.isEmpty {
-                ScrollView {
-                    Text(summary)
-                        .padding()
-                }
-            }
+            .navigationTitle("CV Mentor")
         }
-        .padding()
     }
 
     func showDocumentPicker() {
         let supportedTypes: [UTType] = [UTType.pdf]
         let picker = UIDocumentPickerViewController(forOpeningContentTypes: supportedTypes, asCopy: true)
-        picker.allowsMultipleSelection = false
         picker.delegate = DocumentPicker.shared
+        picker.allowsMultipleSelection = false
+
         DocumentPicker.shared.completion = { url in
             if let url = url {
                 extractText(from: url)
@@ -54,7 +61,8 @@ struct PDFSummaryView: View {
                 fullText += pageText + "\n"
             }
         }
-        self.pdfText = fullText
+        self.cvText = fullText
+       
     }
 }
 

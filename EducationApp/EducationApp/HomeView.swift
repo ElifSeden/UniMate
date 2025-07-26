@@ -1,157 +1,178 @@
 import SwiftUI
 
 struct HomeView: View {
-    var body: some View {
-        VStack(spacing: 20) {
-            
-            // Üst Bilgi
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Hi Elif,")
-                        .font(.title2)
-                        .bold()
-                    
-                    Text("You have 4 pending tests this week")
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
-                }
-                
-                Spacer()
-                
-                Image(systemName: "bell")
-                    .font(.title3)
-                    .padding(.trailing, 4)
-                
-                Image("profile")
-                    .resizable()
-                    .frame(width: 36, height: 36)
-                    .clipShape(Circle())
-            }
-            .padding(.horizontal)
+    @State private var points: Int = 300
+    @State private var selectedDayIndex = Calendar.current.component(.weekday, from: Date()) - 2
+    @State private var completedDays: [Bool] = [true, false, false, true, false, false, false]
 
-            // Puan Kartı
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.blue.opacity(0.1))
-                .frame(height: 100)
-                .overlay(
+    let days = ["P", "S", "Ç", "P", "C", "C", "P"]
+
+    var body: some View {
+        NavigationView {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 24) {
+
+                    // MARK: - Header
                     HStack {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Points")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
-                            Text("120")
+                        VStack(alignment: .leading) {
+                            Text("Hi Elif,")
                                 .font(.title)
                                 .bold()
+                            (
+                                Text("You have ")
+                                    .font(.subheadline)
+                                +
+                                Text("4 pending tests")
+                                    .foregroundColor(.red)
+                                    .font(.subheadline)
+                                +
+                                Text(" this week")
+                            )
                         }
                         Spacer()
-                        Image(systemName: "star.fill")
-                            .font(.largeTitle)
-                            .foregroundColor(.yellow)
+                        Image(systemName: "person.crop.circle.fill")
+                            .resizable()
+                            .frame(width: 44, height: 44)
+                            .foregroundColor(.gray)
                     }
-                    .padding()
-                )
-                .padding(.horizontal)
 
-            // Pending Tests Kartı
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Pending Tests")
-                    .font(.headline)
-                    .padding(.horizontal)
-                
-                ScrollView(.horizontal, showsIndicators: false) {
+                    // MARK: - Week Tracker (MacFit Style)
                     HStack(spacing: 16) {
-                        TestCard(title: "Math", date: "Jul 28", progress: 0.7)
-                        TestCard(title: "Physics", date: "Jul 30", progress: 0.3)
-                        TestCard(title: "History", date: "Aug 1", progress: 0.5)
+                        ForEach(0..<7, id: \.self) { index in
+                            VStack(spacing: 4) {
+                                Text(days[index])
+                                    .font(.subheadline)
+                                    .foregroundColor(.black)
+
+                                ZStack {
+                                    Circle()
+                                        .stroke(Color.gray, lineWidth: 1)
+                                        .frame(width: 24, height: 24)
+
+                                    if completedDays[index] {
+                                        Image(systemName: "checkmark")
+                                            .font(.caption2)
+                                            .foregroundColor(.black)
+                                    }
+                                }
+                            }
+                            .padding(6)
+                            .background(
+                                selectedDayIndex == index ? AnyView(Circle().fill(Color.gray.opacity(0.3))) : AnyView(EmptyView())
+                            )
+                            .clipShape(Circle())
+                            .onTapGesture {
+                                selectedDayIndex = index
+                                completedDays[index].toggle()
+                            }
+                        }
                     }
-                    .padding(.horizontal)
-                }
-            }
 
-            // Subject Buttons
-            VStack(alignment: .leading, spacing: 8) {
-                Text("Subjects")
-                    .font(.headline)
-                    .padding(.horizontal)
+                    // MARK: - Points Card
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 20)
+                            .fill(LinearGradient(gradient: Gradient(colors: [.blue, .purple]), startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .frame(height: 120)
 
-                ScrollView(.horizontal, showsIndicators: false) {
-                    HStack(spacing: 16) {
-                        SubjectButton(title: "Math", icon: "function", color: .purple)
-                        SubjectButton(title: "Biology", icon: "leaf", color: .green)
-                        SubjectButton(title: "History", icon: "book", color: .orange)
-                        SubjectButton(title: "Chemistry", icon: "flask", color: .blue)
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text("\(points) Points")
+                                    .font(.title)
+                                    .bold()
+                                    .foregroundColor(.white)
+
+                                Text("Cross 500 this week to get a free 1-on-1 class")
+                                    .font(.caption)
+                                    .foregroundColor(.white)
+                            }
+                            Spacer()
+                            Button("Take test now") {
+                                // Test action
+                            }
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Color.white)
+                            .foregroundColor(.blue)
+                            .cornerRadius(12)
+                        }
+                        .padding()
                     }
-                    .padding(.horizontal)
-                }
-            }
 
-            Spacer()
-            
-            // Bottom Nav Bar
-            HStack {
-                Spacer()
-                Image(systemName: "house.fill").foregroundColor(.blue)
-                Spacer()
-                Image(systemName: "calendar")
-                Spacer()
-                Image(systemName: "brain.head.profile")
-                Spacer()
-                Image(systemName: "person.crop.circle")
-                Spacer()
+                    // MARK: - Pending Tests
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            Text("4 Pending tests")
+                                .font(.headline)
+                            Spacer()
+                            Image(systemName: "info.circle")
+                        }
+
+                        ForEach(testData, id: \.id) { test in
+                            TestCard(test: test)
+                        }
+                    }
+
+                    // MARK: - Subjects
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Subjects")
+                            .font(.headline)
+
+                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
+                            ForEach(subjects, id: \.self) { subject in
+                                Text(subject)
+                                    .frame(maxWidth: .infinity)
+                                    .padding()
+                                    .background(LinearGradient(colors: [.purple, .orange], startPoint: .topLeading, endPoint: .bottomTrailing))
+                                    .foregroundColor(.white)
+                                    .cornerRadius(14)
+                            }
+                        }
+                    }
+
+                    Spacer()
+                }
+                .padding()
             }
-            .font(.title2)
-            .padding()
-            .background(Color.gray.opacity(0.1))
+            .navigationBarHidden(true)
         }
-        .padding(.top)
     }
 }
 
-// Test Kartı
 struct TestCard: View {
-    var title: String
-    var date: String
-    var progress: CGFloat
-    
+    var test: TestModel
+
     var body: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.headline)
-            Text("Due: \(date)")
+        HStack {
+            VStack(alignment: .leading) {
+                Text(test.title)
+                    .bold()
+                Text(test.subject)
+                    .font(.caption)
+                    .foregroundColor(.purple)
+            }
+            Spacer()
+            Text(test.timeRemaining)
                 .font(.caption)
-                .foregroundColor(.gray)
-            ProgressView(value: progress)
-                .progressViewStyle(LinearProgressViewStyle(tint: .blue))
+                .foregroundColor(.red)
         }
         .padding()
-        .background(Color.white)
-        .cornerRadius(16)
-        .shadow(radius: 2)
-        .frame(width: 160)
+        .background(Color(UIColor.systemGray6))
+        .cornerRadius(12)
     }
 }
 
-// Konu Butonu
-struct SubjectButton: View {
-    var title: String
-    var icon: String
-    var color: Color
-    
-    var body: some View {
-        VStack {
-            Image(systemName: icon)
-                .font(.largeTitle)
-                .foregroundColor(.white)
-            Text(title)
-                .foregroundColor(.white)
-                .font(.headline)
-        }
-        .frame(width: 120, height: 100)
-        .background(color)
-        .cornerRadius(16)
-    }
+struct TestModel {
+    let id = UUID()
+    let title: String
+    let subject: String
+    let timeRemaining: String
 }
 
-#Preview {
-    HomeView()
-}
+let testData = [
+    TestModel(title: "Law of Motion", subject: "Physics", timeRemaining: "1d:10Hr"),
+    TestModel(title: "Law of Motion", subject: "Chemistry", timeRemaining: "1d:10Hr"),
+    TestModel(title: "Law of Motion", subject: "Maths", timeRemaining: "1d:10Hr"),
+    TestModel(title: "Law of Motion", subject: "Physics", timeRemaining: "1d:10Hr")
+]
+
+let subjects = ["Mathematics", "Chemistry", "Physics", "Reasoning"]
