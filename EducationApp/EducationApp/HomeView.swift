@@ -2,10 +2,10 @@ import SwiftUI
 
 struct HomeView: View {
     @State private var points: Int = 300
-    @State private var selectedDayIndex = Calendar.current.component(.weekday, from: Date()) - 2
-    @State private var completedDays: [Bool] = [true, false, false, true, false, false, false]
-
-    let days = ["P", "S", "Ç", "P", "C", "C", "P"]
+    @State private var selectedDate = Date()
+    
+    private let calendar = Calendar.current
+    private let weekdays = ["P", "S", "Ç", "P", "C", "C", "P"]
 
     var body: some View {
         NavigationView {
@@ -36,34 +36,28 @@ struct HomeView: View {
                             .foregroundColor(.gray)
                     }
 
-                    // MARK: - Week Tracker (MacFit Style)
-                    HStack(spacing: 16) {
-                        ForEach(0..<7, id: \.self) { index in
+                    // MARK: - New Calendar Style Day Picker
+                    HStack(spacing: 12) {
+                        ForEach(0..<7) { offset in
+                            let day = Calendar.current.date(byAdding: .day, value: offset - currentWeekdayIndex(), to: Date())!
+                            let isToday = calendar.isDateInToday(day)
+                            let isSelected = calendar.isDate(day, inSameDayAs: selectedDate)
+
                             VStack(spacing: 4) {
-                                Text(days[index])
-                                    .font(.subheadline)
+                                Text(weekdays[offset])
+                                    .font(.caption)
                                     .foregroundColor(.black)
 
-                                ZStack {
-                                    Circle()
-                                        .stroke(Color.gray, lineWidth: 1)
-                                        .frame(width: 24, height: 24)
-
-                                    if completedDays[index] {
-                                        Image(systemName: "checkmark")
-                                            .font(.caption2)
-                                            .foregroundColor(.black)
-                                    }
-                                }
+                                Text("\(calendar.component(.day, from: day))")
+                                    .font(.subheadline)
+                                    .fontWeight(isToday ? .bold : .regular)
+                                    .foregroundColor(isToday ? .black : .gray)
+                                    .frame(width: 32, height: 32)
+                                    .background(isSelected ? Color.gray.opacity(0.2) : Color.clear)
+                                    .clipShape(Circle())
                             }
-                            .padding(6)
-                            .background(
-                                selectedDayIndex == index ? AnyView(Circle().fill(Color.gray.opacity(0.3))) : AnyView(EmptyView())
-                            )
-                            .clipShape(Circle())
                             .onTapGesture {
-                                selectedDayIndex = index
-                                completedDays[index].toggle()
+                                selectedDate = day
                             }
                         }
                     }
@@ -135,6 +129,12 @@ struct HomeView: View {
             }
             .navigationBarHidden(true)
         }
+    }
+
+    // Bugünkü gün index'ini hesaplar (0-6)
+    private func currentWeekdayIndex() -> Int {
+        let weekday = calendar.component(.weekday, from: Date())
+        return (weekday + 5) % 7
     }
 }
 

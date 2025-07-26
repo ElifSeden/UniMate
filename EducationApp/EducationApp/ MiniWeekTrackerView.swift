@@ -1,62 +1,41 @@
 import SwiftUI
 
 struct MiniWeekTrackerView: View {
-    let days = ["P", "S", "Ç", "P", "C", "C", "P"]
-    @State private var selectedDayIndex = Calendar.current.component(.weekday, from: Date()) - 2
-    @State private var completedDays: [Bool] = [true, false, false, true, false, false, true]
+    @Binding var selectedDate: Date
 
-    var completedCount: Int {
-        completedDays.filter { $0 }.count
+    private let calendar = Calendar.current
+    private var weekDates: [Date] {
+        guard let weekInterval = calendar.dateInterval(of: .weekOfMonth, for: Date()) else { return [] }
+        return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: weekInterval.start) }
     }
 
     var body: some View {
-        VStack(spacing: 10) {
-            // Günler
-            HStack(spacing: 12) {
-                ForEach(0..<7, id: \.self) { index in
-                    VStack(spacing: 4) {
-                        Text(days[index])
-                            .font(.caption)
-                            .foregroundColor(.black)
+        HStack(spacing: 12) {
+            ForEach(weekDates, id: \.self) { date in
+                let isToday = calendar.isDateInToday(date)
+                let isSelected = calendar.isDate(date, inSameDayAs: selectedDate)
+                let daySymbol = calendar.shortWeekdaySymbols[calendar.component(.weekday, from: date) - 1]
+                let dayNumber = calendar.component(.day, from: date)
 
-                        ZStack {
-                            Circle()
-                                .stroke(Color.gray, lineWidth: 1)
-                                .frame(width: 22, height: 22)
+                VStack(spacing: 4) {
+                    Text(daySymbol)
+                        .font(.caption)
+                        .foregroundColor(.black)
 
-                            if completedDays[index] {
-                                Image(systemName: "checkmark")
-                                    .font(.system(size: 10, weight: .bold))
-                                    .foregroundColor(.black)
-                            }
-                        }
-                        .frame(width: 28, height: 28)
+                    Text("\(dayNumber)")
+                        .font(.system(size: 14, weight: isToday ? .bold : .regular))
+                        .frame(width: 32, height: 32)
                         .background(
                             Circle()
-                                .fill(selectedDayIndex == index ? Color.gray.opacity(0.2) : Color.clear)
+                                .fill(isToday ? Color.red : (isSelected ? Color.gray.opacity(0.2) : Color.clear))
                         )
-                        .clipShape(Circle())
-                        .onTapGesture {
-                            selectedDayIndex = index
-                            completedDays[index].toggle()
-                        }
-                    }
-                    .frame(maxWidth: .infinity)
+                        .foregroundColor(isToday ? .white : .black)
+                }
+                .onTapGesture {
+                    selectedDate = date
                 }
             }
-            .padding(.horizontal, 4) // 🔧 daha dar padding
-
-            // Hedef
-            VStack(spacing: 2) {
-                Text("HEDEF")
-                    .font(.caption)
-                    .foregroundColor(.gray)
-
-                Text("\(completedCount) / 6")
-                    .font(.headline)
-                    .bold()
-            }
         }
-        .padding(.top, 4) // 🔧 üst padding azaltıldı
+        .padding(.horizontal)
     }
 }
