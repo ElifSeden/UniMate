@@ -3,7 +3,11 @@ import SwiftUI
 struct HomeView: View {
     @State private var points: Int = 300
     @State private var selectedDate = Date()
-    
+    @State private var exams: [Exam] = []
+    @State private var showingAddExam = false
+    @State private var showingTimetable = false
+    @State private var courses: [Course] = sampleCourses
+
     private let calendar = Calendar.current
     private let weekdays = ["P", "S", "Ç", "P", "C", "C", "P"]
 
@@ -36,10 +40,10 @@ struct HomeView: View {
                             .foregroundColor(.gray)
                     }
 
-                    // MARK: - New Calendar Style Day Picker
+                    // MARK: - Calendar Day Picker
                     HStack(spacing: 12) {
                         ForEach(0..<7) { offset in
-                            let day = Calendar.current.date(byAdding: .day, value: offset - currentWeekdayIndex(), to: Date())!
+                            let day = calendar.date(byAdding: .day, value: offset - currentWeekdayIndex(), to: Date())!
                             let isToday = calendar.isDateInToday(day)
                             let isSelected = calendar.isDate(day, inSameDayAs: selectedDate)
 
@@ -62,6 +66,44 @@ struct HomeView: View {
                         }
                     }
 
+                    // MARK: - Exams on Selected Date
+                    let filteredExams = exams.filter { calendar.isDate($0.date, inSameDayAs: selectedDate) }
+
+                    if !filteredExams.isEmpty {
+                        VStack(alignment: .leading, spacing: 8) {
+                            Text("Exams on this day")
+                                .font(.headline)
+
+                            ForEach(filteredExams) { exam in
+                                VStack(alignment: .leading, spacing: 4) {
+                                    Text(exam.subject)
+                                        .bold()
+                                    if !exam.note.isEmpty {
+                                        Text(exam.note)
+                                            .font(.caption)
+                                            .foregroundColor(.gray)
+                                    }
+                                }
+                                .padding()
+                                .background(Color(UIColor.systemGray5))
+                                .cornerRadius(8)
+                            }
+                        }
+                    }
+
+                    // MARK: - Add Exam Button
+                    Button(action: {
+                        showingAddExam = true
+                    }) {
+                        Label("Add Exam", systemImage: "plus.circle.fill")
+                            .font(.headline)
+                            .padding()
+                            .frame(maxWidth: .infinity)
+                            .background(Color.blue)
+                            .foregroundColor(.white)
+                            .cornerRadius(12)
+                    }
+
                     // MARK: - Points Card
                     ZStack {
                         RoundedRectangle(cornerRadius: 20)
@@ -81,7 +123,7 @@ struct HomeView: View {
                             }
                             Spacer()
                             Button("Take test now") {
-                                // Test action
+                                // Action
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 8)
@@ -92,87 +134,63 @@ struct HomeView: View {
                         .padding()
                     }
 
-                    // MARK: - Pending Tests
-                    VStack(alignment: .leading, spacing: 8) {
+                    // MARK: - Timetable Card
+                    VStack(spacing: 12) {
                         HStack {
-                            Text("4 Pending tests")
-                                .font(.headline)
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Weekly Schedule")
+                                    .font(.title2.bold())
+                                Text("Your weekly courses")
+                                    .font(.subheadline)
+                                    .foregroundColor(.gray)
+                            }
                             Spacer()
-                            Image(systemName: "info.circle")
-                        }
-
-                        ForEach(testData, id: \.id) { test in
-                            TestCard(test: test)
-                        }
-                    }
-
-                    // MARK: - Subjects
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("Subjects")
-                            .font(.headline)
-
-                        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                            ForEach(subjects, id: \.self) { subject in
-                                Text(subject)
-                                    .frame(maxWidth: .infinity)
-                                    .padding()
-                                    .background(LinearGradient(colors: [.purple, .orange], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            Button(action: {
+                                showingTimetable = true
+                            }) {
+                                Image(systemName: "plus")
+                                    .font(.title2)
+                                    .padding(10)
+                                    .background(Color.blue)
                                     .foregroundColor(.white)
-                                    .cornerRadius(14)
+                                    .clipShape(Circle())
                             }
                         }
-                    }
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(20)
+                        .padding(.horizontal, 4)
 
-                    Spacer()
+                        GridTimetableView(courses: courses)
+                            .padding(.horizontal, 4)
+                    }
                 }
                 .padding()
             }
             .navigationBarHidden(true)
+            .sheet(isPresented: $showingAddExam) {
+                AddExamView { newExam in
+                    exams.append(newExam)
+                }
+            }
+            .sheet(isPresented: $showingTimetable) {
+                AddNewCourseView { newCourse in
+                    courses.append(newCourse)
+                }
+            }
         }
     }
 
-    // Bugünkü gün index'ini hesaplar (0-6)
     private func currentWeekdayIndex() -> Int {
         let weekday = calendar.component(.weekday, from: Date())
         return (weekday + 5) % 7
     }
 }
 
-struct TestCard: View {
-    var test: TestModel
-
-    var body: some View {
-        HStack {
-            VStack(alignment: .leading) {
-                Text(test.title)
-                    .bold()
-                Text(test.subject)
-                    .font(.caption)
-                    .foregroundColor(.purple)
-            }
-            Spacer()
-            Text(test.timeRemaining)
-                .font(.caption)
-                .foregroundColor(.red)
-        }
-        .padding()
-        .background(Color(UIColor.systemGray6))
-        .cornerRadius(12)
-    }
-}
-
-struct TestModel {
+// MARK: - Exam Model
+struct Exam: Identifiable {
     let id = UUID()
-    let title: String
     let subject: String
-    let timeRemaining: String
+    let date: Date
+    let note: String
 }
-
-let testData = [
-    TestModel(title: "Law of Motion", subject: "Physics", timeRemaining: "1d:10Hr"),
-    TestModel(title: "Law of Motion", subject: "Chemistry", timeRemaining: "1d:10Hr"),
-    TestModel(title: "Law of Motion", subject: "Maths", timeRemaining: "1d:10Hr"),
-    TestModel(title: "Law of Motion", subject: "Physics", timeRemaining: "1d:10Hr")
-]
-
-let subjects = ["Mathematics", "Chemistry", "Physics", "Reasoning"]
