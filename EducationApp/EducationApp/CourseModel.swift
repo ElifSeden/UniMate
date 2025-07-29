@@ -1,12 +1,21 @@
 import SwiftUI
 
 struct Course: Identifiable {
-    let id = UUID()
-    let name: String
-    let day: String
-    let hour: Int
-    let location: String
-    let color: Color
+    var id: UUID
+    var name: String
+    var day: String
+    var hour: Int
+    var location: String
+    var color: Color
+
+    init(id: UUID = UUID(), name: String, day: String, hour: Int, location: String, color: Color) {
+        self.id = id
+        self.name = name
+        self.day = day
+        self.hour = hour
+        self.location = location
+        self.color = color
+    }
 }
 
 // Sadece burada tanımlı olsun. Başka dosyada TANIMLAMA!

@@ -1,21 +1,9 @@
 import SwiftUI
-import FirebaseAuth
 
 struct RootView: View {
-    @State private var isLoggedIn = Auth.auth().currentUser != nil
+    @State private var selectedTab = 0  // 🔁 Sekme kontrolü için gerekli
 
     var body: some View {
-        Group {
-            if isLoggedIn {
-                ProfileView() // Giriş yaptıysa profil sayfası
-            } else {
-                AuthView() // Giriş yapmadıysa giriş/kayıt ekranı
-            }
-        }
-        .onAppear {
-            Auth.auth().addStateDidChangeListener { _, user in
-                self.isLoggedIn = user != nil
-            }
-        }
+        MainTabView(selectedTab: $selectedTab)  // ✅ Parametre verildi
     }
 }

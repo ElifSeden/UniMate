@@ -29,7 +29,8 @@ struct TimetableView: View {
             .padding(.horizontal)
 
             // Ders Tablosu
-            GridTimetableView(courses: courses)
+            GridTimetableView(courses: $courses)
+
                 .padding(.horizontal)
 
             Spacer()

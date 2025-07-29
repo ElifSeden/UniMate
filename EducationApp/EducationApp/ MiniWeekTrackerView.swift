@@ -2,37 +2,76 @@ import SwiftUI
 
 struct MiniWeekTrackerView: View {
     @Binding var selectedDate: Date
+    @Binding var weekOffset: Int
 
     private let calendar = Calendar.current
+
     private var weekDates: [Date] {
-        guard let weekInterval = calendar.dateInterval(of: .weekOfMonth, for: Date()) else { return [] }
+        guard let baseWeek = calendar.date(byAdding: .weekOfYear, value: weekOffset, to: Date()),
+              let weekInterval = calendar.dateInterval(of: .weekOfMonth, for: baseWeek) else { return [] }
         return (0..<7).compactMap { calendar.date(byAdding: .day, value: $0, to: weekInterval.start) }
     }
 
     var body: some View {
-        HStack(spacing: 12) {
-            ForEach(weekDates, id: \.self) { date in
-                let isToday = calendar.isDateInToday(date)
-                let isSelected = calendar.isDate(date, inSameDayAs: selectedDate)
-                let daySymbol = calendar.shortWeekdaySymbols[calendar.component(.weekday, from: date) - 1]
-                let dayNumber = calendar.component(.day, from: date)
-
-                VStack(spacing: 4) {
-                    Text(daySymbol)
+        VStack(spacing: 8) {
+            // Gün isimleri satırı
+            HStack(spacing: 12) {
+                Text("") // boşluk < için hizalama
+                    .frame(width: 24)
+                ForEach(weekDates, id: \.self) { date in
+                    let weekday = calendar.shortWeekdaySymbols[calendar.component(.weekday, from: date) - 1]
+                    Text(weekday)
                         .font(.caption)
-                        .foregroundColor(.black)
-
-                    Text("\(dayNumber)")
-                        .font(.system(size: 14, weight: isToday ? .bold : .regular))
-                        .frame(width: 32, height: 32)
-                        .background(
-                            Circle()
-                                .fill(isToday ? Color.red : (isSelected ? Color.gray.opacity(0.2) : Color.clear))
-                        )
-                        .foregroundColor(isToday ? .white : .black)
+                        .foregroundColor(.gray)
+                        .frame(maxWidth: .infinity)
                 }
-                .onTapGesture {
-                    selectedDate = date
+                Text("") // boşluk > için hizalama
+                    .frame(width: 24)
+            }
+
+            // Gün numaraları ve butonlar satırı
+            HStack(spacing: 12) {
+                // < Butonu
+                Button(action: {
+                    weekOffset -= 1
+                }) {
+                    Image(systemName: "chevron.left")
+                        .foregroundColor(.blue)
+                        .frame(width: 24, height: 32)
+                }
+
+                // Günler
+                ForEach(weekDates, id: \.self) { date in
+                    let isToday = calendar.isDateInToday(date)
+                    let isSelected = calendar.isDate(date, inSameDayAs: selectedDate)
+                    let day = calendar.component(.day, from: date)
+
+                    ZStack {
+                        Circle()
+                            .fill(
+                                isSelected ? Color.blue :
+                                (isToday ? Color(.systemGray5) : Color.clear)
+                            )
+                            .frame(width: 32, height: 32)
+
+                        Text("\(day)")
+                            .font(.headline)
+                            .foregroundColor(isSelected ? .white : .black)
+                    }
+                    .onTapGesture {
+                        selectedDate = date
+                    }
+                }
+
+
+
+                // > Butonu
+                Button(action: {
+                    weekOffset += 1
+                }) {
+                    Image(systemName: "chevron.right")
+                        .foregroundColor(.blue)
+                        .frame(width: 24, height: 32)
                 }
             }
         }

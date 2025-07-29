@@ -1,9 +1,11 @@
 import SwiftUI
 
 struct MainTabView: View {
+    @Binding var selectedTab: Int
+
     var body: some View {
-        TabView {
-            HomeView()
+        TabView(selection: $selectedTab) {
+            HomeView(selectedTab: $selectedTab)
                 .tabItem {
                     Label("Home", systemImage: "house")
                 }
