@@ -7,23 +7,26 @@ struct MainTabView: View {
                 .tabItem {
                     Label("Home", systemImage: "house")
                 }
+                .tag(0)
 
-            PDFSummaryView() // PDF özetleme ekranı
+            PDFSummaryView()
                 .tabItem {
                     Label("PDF", systemImage: "doc.text.magnifyingglass")
                 }
+                .tag(1)
 
-            GeminiScreen() // Gemini AI ekranı
+            GeminiScreen()
                 .tabItem {
                     Label("Gemini", systemImage: "sparkles")
                 }
+                .tag(2)
 
-            CVScreen() // CV rehberi ekranı
+            CVInputView()
                 .tabItem {
                     Label("CV", systemImage: "person.crop.rectangle")
                 }
+                .tag(3)
         }
-        .accentColor(.blue) // Alt çubuğun seçili rengi
+        .accentColor(.blue)
     }
 }
-

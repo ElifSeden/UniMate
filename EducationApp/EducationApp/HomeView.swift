@@ -7,9 +7,13 @@ struct HomeView: View {
     @State private var showingAddExam = false
     @State private var showingTimetable = false
     @State private var courses: [Course] = sampleCourses
+    @State private var weekOffset: Int = 0
 
+    // Weekday labels - Sunday to Saturday
+    private let weekdays = ["S", "M", "T", "W", "T", "F", "S"]
+
+    // Use system calendar with default (Sunday-starting)
     private let calendar = Calendar.current
-    private let weekdays = ["P", "S", "Ç", "P", "C", "C", "P"]
 
     var body: some View {
         NavigationView {
@@ -40,15 +44,30 @@ struct HomeView: View {
                             .foregroundColor(.gray)
                     }
 
-                    // MARK: - Calendar Day Picker
-                    HStack(spacing: 12) {
-                        ForEach(0..<7) { offset in
-                            let day = calendar.date(byAdding: .day, value: offset - currentWeekdayIndex(), to: Date())!
+                    // MARK: - Week Switchable Calendar
+                    let currentWeekStart = calendar.date(byAdding: .day, value: weekOffset * 7, to: Date())!
+
+                    HStack {
+                        Button(action: {
+                            withAnimation {
+                                weekOffset -= 1
+                            }
+                        }) {
+                            Image(systemName: "chevron.left")
+                                .padding(6)
+                                .background(Color.gray.opacity(0.2))
+                                .clipShape(Circle())
+                        }
+
+                        Spacer()
+
+                        ForEach(getWeekDates(for: currentWeekStart), id: \.self) { day in
                             let isToday = calendar.isDateInToday(day)
                             let isSelected = calendar.isDate(day, inSameDayAs: selectedDate)
 
                             VStack(spacing: 4) {
-                                Text(weekdays[offset])
+                                // Map .weekday (1=Sun, ..., 7=Sat) to index 0-6
+                                Text(weekdays[calendar.component(.weekday, from: day) - 1])
                                     .font(.caption)
                                     .foregroundColor(.black)
 
@@ -57,14 +76,28 @@ struct HomeView: View {
                                     .fontWeight(isToday ? .bold : .regular)
                                     .foregroundColor(isToday ? .black : .gray)
                                     .frame(width: 32, height: 32)
-                                    .background(isSelected ? Color.gray.opacity(0.2) : Color.clear)
+                                    .background(isSelected ? Color.gray.opacity(0.3) : Color.clear)
                                     .clipShape(Circle())
                             }
                             .onTapGesture {
                                 selectedDate = day
                             }
                         }
+
+                        Spacer()
+
+                        Button(action: {
+                            withAnimation {
+                                weekOffset += 1
+                            }
+                        }) {
+                            Image(systemName: "chevron.right")
+                                .padding(6)
+                                .background(Color.gray.opacity(0.2))
+                                .clipShape(Circle())
+                        }
                     }
+                    .padding(.horizontal)
 
                     // MARK: - Exams on Selected Date
                     let filteredExams = exams.filter { calendar.isDate($0.date, inSameDayAs: selectedDate) }
@@ -181,9 +214,12 @@ struct HomeView: View {
         }
     }
 
-    private func currentWeekdayIndex() -> Int {
-        let weekday = calendar.component(.weekday, from: Date())
-        return (weekday + 5) % 7
+    // MARK: - Week Helpers
+    private func getWeekDates(for baseDate: Date) -> [Date] {
+        var cal = Calendar(identifier: .gregorian)
+        cal.firstWeekday = 1 // Sunday
+        let weekInterval = cal.dateInterval(of: .weekOfYear, for: baseDate)!
+        return (0..<7).compactMap { cal.date(byAdding: .day, value: $0, to: weekInterval.start) }
     }
 }
 

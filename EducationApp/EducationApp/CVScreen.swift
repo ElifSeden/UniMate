@@ -1,18 +1,19 @@
 import SwiftUI
-import UniformTypeIdentifiers
 import PDFKit
-
+import UniformTypeIdentifiers
 
 struct CVScreen: View {
+    @State private var showPicker = false
     @State private var cvText: String = ""
     @State private var feedback: String = ""
     @State private var isLoading = false
+    @State private var selectedURL: URL?
 
     var body: some View {
         NavigationView {
             VStack(spacing: 20) {
                 Button("Upload CV (PDF)") {
-                    showDocumentPicker()
+                    showPicker = true
                 }
                 .padding()
                 .background(Color.purple)
@@ -34,22 +35,15 @@ struct CVScreen: View {
             }
             .padding()
             .navigationTitle("CV Mentor")
-        }
-    }
-
-    func showDocumentPicker() {
-        let supportedTypes: [UTType] = [UTType.pdf]
-        let picker = UIDocumentPickerViewController(forOpeningContentTypes: supportedTypes, asCopy: true)
-        picker.delegate = DocumentPicker.shared
-        picker.allowsMultipleSelection = false
-
-        DocumentPicker.shared.completion = { url in
-            if let url = url {
-                extractText(from: url)
+            .sheet(isPresented: $showPicker) {
+                DocumentPicker { url in
+                    if let url = url {
+                        selectedURL = url
+                        extractText(from: url)
+                    }
+                }
             }
         }
-
-        UIApplication.shared.windows.first?.rootViewController?.present(picker, animated: true)
     }
 
     func extractText(from url: URL) {
@@ -62,7 +56,6 @@ struct CVScreen: View {
             }
         }
         self.cvText = fullText
-       
+        // istersen burada AI yorum fonksiyonu çağrısı yapabilirsin
     }
 }
-
