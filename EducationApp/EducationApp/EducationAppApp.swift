@@ -1,17 +1,16 @@
-//
-//  EducationAppApp.swift
-//  EducationApp
-//
-//  Created by Elif Seden Yurtseven on 25.07.2025.
-//
-
 import SwiftUI
+import Firebase
 
 @main
 struct EducationAppApp: App {
+
+    init() {
+        FirebaseApp.configure()
+    }
+
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            RootView() // Burada artık kullanıcı giriş yaptı mı kontrol ediyoruz
         }
     }
 }

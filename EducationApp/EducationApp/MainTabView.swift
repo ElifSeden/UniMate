@@ -17,7 +17,7 @@ struct MainTabView: View {
 
             GeminiScreen()
                 .tabItem {
-                    Label("Gemini", systemImage: "sparkles")
+                    Label("UniMate AI", systemImage: "sparkles")
                 }
                 .tag(2)
 

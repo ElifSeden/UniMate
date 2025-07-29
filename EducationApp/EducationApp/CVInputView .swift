@@ -7,11 +7,13 @@ struct CVInputView: View {
     @State private var name = ""
     @State private var email = ""
     @State private var phone = ""
+    @State private var location = ""
+    @State private var website = ""
     @State private var linkedin = ""
     @State private var github = ""
     @State private var position = ""
-    @State private var summary = "" // Yeni eklendi
-    @State private var languagesText = "" // Yeni eklendi
+    @State private var summary = ""
+    @State private var languagesText = ""
 
     // MARK: - Fotoğraf
     @State private var selectedPhoto: PhotosPickerItem?
@@ -36,20 +38,47 @@ struct CVInputView: View {
         NavigationView {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
-                    Text("Yeni Nesil CV Oluştur")
+                    HStack {
+                    Spacer()
+                    Text("CV Mentor")
                         .font(.title)
-                        .bold()
+                        .fontWeight(.bold)
+                        .foregroundColor(.white)
+                    Spacer()
+                }
+                .padding()
+                .background(Color.blue)
+                .cornerRadius(20)
+                .padding(.horizontal)
+
+                    
 
                     // Tema Seçimi
-                    Text("Tema Rengi").font(.headline)
-                    HStack(spacing: 20) {
-                        themeCircle(color: UIColor.systemGreen, selected: selectedTheme == "Green")
-                            .onTapGesture { selectedTheme = "Green" }
-                        themeCircle(color: UIColor.systemBlue, selected: selectedTheme == "Navy")
-                            .onTapGesture { selectedTheme = "Navy" }
-                        themeCircle(color: UIColor.systemRed, selected: selectedTheme == "Maroon")
-                            .onTapGesture { selectedTheme = "Maroon" }
+                    // Tema Seçimi - Gri kutu içinde
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("CV Tema Rengi").font(.headline)
+                        HStack(spacing: 20) {
+                            themeCircle(color: UIColor.systemGreen, selected: selectedTheme == "Green")
+                                .onTapGesture { selectedTheme = "Green" }
+
+                            themeCircle(color: UIColor.systemBlue, selected: selectedTheme == "Navy")
+                                .onTapGesture { selectedTheme = "Navy" }
+
+                            themeCircle(color: UIColor.systemRed, selected: selectedTheme == "Maroon")
+                                .onTapGesture { selectedTheme = "Maroon" }
+
+                            themeCircle(color: UIColor.black, selected: selectedTheme == "Black")
+                                .onTapGesture { selectedTheme = "Black" }
+
+                            themeCircle(color: UIColor(red: 0.75, green: 0.6, blue: 0.0, alpha: 1.0), selected: selectedTheme == "DarkYellow")
+                                .onTapGesture { selectedTheme = "DarkYellow" }
+                        }
+
                     }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .cornerRadius(12)
+
 
                     // Fotoğraf
                     HStack {
@@ -81,6 +110,8 @@ struct CVInputView: View {
                     labeledTextField(title: "Position / Title", text: $position)
                     labeledTextField(title: "Email", text: $email, keyboard: .emailAddress)
                     labeledTextField(title: "Phone", text: $phone)
+                    labeledTextField(title: "Location", text: $location)
+                    labeledTextField(title: "Website", text: $website)
                     labeledTextField(title: "LinkedIn", text: $linkedin)
                     labeledTextField(title: "GitHub", text: $github)
 
@@ -138,17 +169,22 @@ struct CVInputView: View {
                             switch selectedTheme {
                                 case "Navy": return .navy
                                 case "Maroon": return .maroon
+                                case "Black": return .black
+                                case "DarkYellow": return .darkYellow
                                 default: return .green
                             }
                         }()
+
 
                         pdfData = PDFCreator.createStyledPDF(
                             name: name,
                             position: position,
                             email: email,
                             phone: phone,
+                            location: location,
                             linkedin: linkedin,
                             github: github,
+                            website: website,
                             skills: skillsArray,
                             experiences: experiences,
                             educations: educations,
@@ -163,7 +199,8 @@ struct CVInputView: View {
                         Text("Generate My CV")
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.purple)
+                            .background(Color.blue)
+
                             .foregroundColor(.white)
                             .cornerRadius(10)
                     }
@@ -181,7 +218,8 @@ struct CVInputView: View {
                 }
                 .padding()
             }
-            .navigationTitle("CV Mentor")
+            // 🔵 Mavi arka planlı başlık
+           
             .sheet(isPresented: $showPDFPreview) {
                 if let data = pdfData {
                     PDFPreviewView(pdfData: data)
@@ -198,11 +236,14 @@ struct CVInputView: View {
                 .foregroundColor(.gray)
             TextField("", text: text)
                 .keyboardType(keyboard)
+                .autocapitalization(.none) // 🔹 küçük harf zorla
+                .disableAutocorrection(true) // 🔹 otomatik düzeltme kapalı
                 .padding(10)
                 .background(Color(.systemGray6))
                 .cornerRadius(8)
         }
     }
+
 
     func themeCircle(color: UIColor, selected: Bool) -> some View {
         Circle()
@@ -211,6 +252,7 @@ struct CVInputView: View {
             .frame(width: 32, height: 32)
     }
 }
+
 struct EducationInfo: Identifiable {
     let id = UUID()
     var school: String = ""

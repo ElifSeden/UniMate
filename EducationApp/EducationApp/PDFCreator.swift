@@ -9,6 +9,12 @@ struct PDFCreator {
         static let green = Theme(primaryColor: UIColor.systemGreen, titleColor: UIColor.systemGreen)
         static let navy = Theme(primaryColor: UIColor.systemBlue, titleColor: UIColor.systemBlue)
         static let maroon = Theme(primaryColor: UIColor.systemRed, titleColor: UIColor.systemRed)
+        static let black = Theme(primaryColor: UIColor.black, titleColor: UIColor.black)
+        static let darkYellow = Theme(
+            primaryColor: UIColor(red: 0.75, green: 0.6, blue: 0.0, alpha: 1.0),
+            titleColor: UIColor(red: 0.75, green: 0.6, blue: 0.0, alpha: 1.0)
+        )
+
     }
 
     static func createStyledPDF(
@@ -16,8 +22,10 @@ struct PDFCreator {
         position: String,
         email: String,
         phone: String,
+        location: String,
         linkedin: String,
         github: String,
+        website: String?,
         skills: [String],
         experiences: [ExperienceInfo],
         educations: [EducationInfo],
@@ -33,124 +41,125 @@ struct PDFCreator {
         ] as [String: Any]
 
         let pageWidth: CGFloat = 595.2
-        let pageHeight: CGFloat = 841.8
         let margin: CGFloat = 40
-        let columnGap: CGFloat = 20
-        let columnWidth = (pageWidth - 2 * margin - columnGap) / 2
-
-        let renderer = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: pageWidth, height: pageHeight), format: format)
+        let renderer = UIGraphicsPDFRenderer(bounds: CGRect(x: 0, y: 0, width: pageWidth, height: 841.8), format: format)
 
         let data = renderer.pdfData { context in
             context.beginPage()
-
             var yOffset: CGFloat = margin
 
             // Profil Fotoğrafı
             if let image = profileImage {
                 let imgRect = CGRect(x: margin, y: yOffset, width: 80, height: 80)
                 context.cgContext.saveGState()
-                let path = UIBezierPath(ovalIn: imgRect)
-                path.addClip()
+                UIBezierPath(ovalIn: imgRect).addClip()
                 image.draw(in: imgRect)
                 context.cgContext.restoreGState()
             }
 
-            // İsim ve Pozisyon
-            let nameX = margin + 100
-            name.draw(at: CGPoint(x: nameX, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 22)])
-            yOffset += 26
-            position.draw(at: CGPoint(x: nameX, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 16), .foregroundColor: UIColor.darkGray])
-            yOffset += 24
+            let infoX = margin + 100
 
-            // Özet
-            let summaryRect = CGRect(x: nameX, y: yOffset, width: pageWidth - nameX - margin, height: 60)
-            summary.draw(in: summaryRect, withAttributes: [.font: UIFont.systemFont(ofSize: 12)])
-            yOffset += 70
+            // İsim ve Pozisyon
+            name.uppercased().draw(at: CGPoint(x: infoX, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 20)])
+            yOffset += 26
+            position.uppercased().draw(at: CGPoint(x: infoX, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 14)])
+            yOffset += 26
 
             // İletişim Bilgileri
-            let iconFont = UIFont.systemFont(ofSize: 12)
-            let infoX = margin
-            let contactGap: CGFloat = 20
-            "📧 \(email)".draw(at: CGPoint(x: infoX, y: yOffset), withAttributes: [.font: iconFont])
-            yOffset += contactGap
-            "🔗 \(linkedin)".draw(at: CGPoint(x: infoX, y: yOffset), withAttributes: [.font: iconFont])
-            yOffset += contactGap
-            "💻 \(github)".draw(at: CGPoint(x: infoX, y: yOffset), withAttributes: [.font: iconFont])
-            yOffset += contactGap + 10
+            let infoFont = UIFont.systemFont(ofSize: 11)
+            let infos = [
+                "✉️  \(email)",
+                "📞  \(phone)",
+                "📍  \(location)",
+                "💻  \(github)",
+                "🔗  \(linkedin)"
+            ] + (website != nil ? ["🌐  \(website!)"] : [])
 
-            // Divider
-            context.cgContext.setStrokeColor(theme.primaryColor.cgColor)
-            context.cgContext.setLineWidth(1)
-            context.cgContext.move(to: CGPoint(x: margin, y: yOffset))
-            context.cgContext.addLine(to: CGPoint(x: pageWidth - margin, y: yOffset))
-            context.cgContext.strokePath()
+            for info in infos {
+                info.draw(at: CGPoint(x: infoX, y: yOffset), withAttributes: [.font: infoFont])
+                yOffset += 16
+            }
+
+            yOffset += 10
+
+            // Hakkımda (Summary)
+            let summaryFont = UIFont.systemFont(ofSize: 12)
+            let summaryAttributes: [NSAttributedString.Key: Any] = [.font: summaryFont]
+            let summaryRect = CGRect(x: margin, y: yOffset, width: pageWidth - 2 * margin, height: .greatestFiniteMagnitude)
+
+            let summaryHeight = summary.boundingRect(with: summaryRect.size, options: .usesLineFragmentOrigin, attributes: summaryAttributes, context: nil).height
+
+            summary.draw(in: CGRect(x: margin, y: yOffset, width: pageWidth - 2 * margin, height: summaryHeight), withAttributes: summaryAttributes)
+            yOffset += summaryHeight + 10
+
+
+            // İlk çizgi (Work Experience öncesi)
+            drawDivider(context: context, y: yOffset, theme: theme)
             yOffset += 20
 
             // Work Experience
             "Work Experience".draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 16)])
-            yOffset += 20
+            yOffset += 28
 
             for exp in experiences {
                 let dateText = "\(formatDate(exp.startDate)) - \(formatDate(exp.endDate))"
-                dateText.draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 11), .foregroundColor: UIColor.gray])
+                dateText.draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 12), .foregroundColor: UIColor.gray])
 
-                let titleX = margin + 130
-                exp.position.draw(at: CGPoint(x: titleX, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 13)])
-                yOffset += 16
-                exp.company.draw(at: CGPoint(x: titleX, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 12)])
-                yOffset += 16
+                let contentX = margin + 160
+                exp.position.draw(at: CGPoint(x: contentX, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 14)])
+                yOffset += 20
+
+                exp.company.draw(at: CGPoint(x: contentX, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 13)])
+                yOffset += 18
 
                 let lines = exp.description.components(separatedBy: "\n")
-                for line in lines {
-                    ("\u{2022} \(line)").draw(in: CGRect(x: titleX, y: yOffset, width: pageWidth - titleX - margin, height: 18), withAttributes: [.font: UIFont.systemFont(ofSize: 11)])
+                for (index, line) in lines.enumerated() {
+                    let numbered = "\(index + 1). \(line)"
+                    numbered.draw(in: CGRect(x: contentX, y: yOffset, width: pageWidth - contentX - margin, height: 18), withAttributes: [.font: UIFont.systemFont(ofSize: 12)])
                     yOffset += 16
                 }
-                yOffset += 10
+                yOffset += 16
             }
 
-            // Divider
-            context.cgContext.setStrokeColor(theme.primaryColor.cgColor)
-            context.cgContext.setLineWidth(1)
-            context.cgContext.move(to: CGPoint(x: margin, y: yOffset))
-            context.cgContext.addLine(to: CGPoint(x: pageWidth - margin, y: yOffset))
-            context.cgContext.strokePath()
+            drawDivider(context: context, y: yOffset, theme: theme)
             yOffset += 20
 
             // Education
             "Education".draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 16)])
-            yOffset += 20
+            yOffset += 28
 
             for edu in educations {
-                edu.school.draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 13)])
-                yOffset += 16
-                edu.degree.draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 12)])
-                yOffset += 16
+                edu.school.draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 14)])
+                yOffset += 20
+                edu.degree.draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 13)])
+                yOffset += 18
                 let dateText = "\(formatDate(edu.startDate)) - \(formatDate(edu.endDate))"
-                dateText.draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 11), .foregroundColor: UIColor.gray])
-                yOffset += 24
+                dateText.draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 12), .foregroundColor: UIColor.gray])
+                yOffset += 32
             }
 
-            // Divider
-            context.cgContext.setStrokeColor(theme.primaryColor.cgColor)
-            context.cgContext.setLineWidth(1)
-            context.cgContext.move(to: CGPoint(x: margin, y: yOffset))
-            context.cgContext.addLine(to: CGPoint(x: pageWidth - margin, y: yOffset))
-            context.cgContext.strokePath()
+            drawDivider(context: context, y: yOffset, theme: theme)
             yOffset += 20
 
-            // Skills
-            "Skills".draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 14)])
-            yOffset += 18
-            for skill in skills {
-                ("\u{2022} \(skill)").draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 12)])
-                yOffset += 16
-            }
+            // Skills & Languages
+            let columnWidth = (pageWidth - 2 * margin - 20) / 2
+            let leftX = margin
+            let rightX = margin + columnWidth + 20
+            let maxLines = max(skills.count, languages.count)
 
+            "Skills".draw(at: CGPoint(x: leftX, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 14)])
+            "Languages".draw(at: CGPoint(x: rightX, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 14)])
             yOffset += 20
-            "Languages".draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 14)])
-            yOffset += 18
-            for lang in languages {
-                ("\u{2022} \(lang)").draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 12)])
+
+            for i in 0..<maxLines {
+                if i < skills.count {
+                    let skill = "\u{2022} \(skills[i])"
+                    skill.draw(at: CGPoint(x: leftX, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 12)])
+                }
+                if i < languages.count {
+                    let lang = "\u{2022} \(languages[i])"
+                    lang.draw(at: CGPoint(x: rightX, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 12)])
+                }
                 yOffset += 16
             }
         }
@@ -158,9 +167,17 @@ struct PDFCreator {
         return data
     }
 
+    private static func drawDivider(context: UIGraphicsPDFRendererContext, y: CGFloat, theme: Theme) {
+        context.cgContext.setStrokeColor(theme.primaryColor.cgColor)
+        context.cgContext.setLineWidth(1)
+        context.cgContext.move(to: CGPoint(x: 40, y: y))
+        context.cgContext.addLine(to: CGPoint(x: 595.2 - 40, y: y))
+        context.cgContext.strokePath()
+    }
+
     private static func formatDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        formatter.dateStyle = .medium
+        formatter.dateFormat = "dd MMM yyyy"
         return formatter.string(from: date)
     }
 }
