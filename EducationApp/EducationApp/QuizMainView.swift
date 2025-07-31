@@ -14,57 +14,73 @@ struct QuizMainView: View {
 
     var body: some View {
         NavigationView {
-            VStack(spacing: 20) {
-                Text("Quiz Oluştur")
-                    .font(.largeTitle).bold()
+            VStack {
+                // Başlık barı
+                HStack {
+                    Image(systemName: "checklist")
+                        .foregroundColor(.white)
+                    Text("Quiz")
+                        .font(.title2.bold())
+                        .foregroundColor(.white)
+                }
+                .padding()
+                .frame(maxWidth: .infinity)
+                .background(Color.blue)
 
-                Image(systemName: "checklist")
-                    .resizable()
-                    .scaledToFit()
-                    .frame(width: 70, height: 70)
-                    .foregroundColor(.blue)
+                Spacer()
 
-                if let url = selectedDocumentURL {
-                    Text(url.lastPathComponent)
-                        .font(.subheadline)
-                        .foregroundColor(.gray)
+                VStack(spacing: 20) {
+                    Image(systemName: "doc.text.magnifyingglass")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 80, height: 80)
+                        .foregroundColor(.gray.opacity(0.6))
 
-                    if isLoading {
-                        ProgressView("Hazırlanıyor...")
+                    if let url = selectedDocumentURL {
+                        Text(url.lastPathComponent)
+                            .font(.subheadline)
+                            .foregroundColor(.gray)
+
+                        if isLoading {
+                            ProgressView("Hazırlanıyor...")
+                                .padding()
+                        } else {
+                            Button("Devam Et") {
+                                showSetup = true
+                            }
+                            .frame(maxWidth: .infinity)
                             .padding()
+                            .background(Color.green)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                            .padding(.horizontal, 40)
+                        }
+
                     } else {
-                        Button("Devam Et") {
-                            showSetup = true
+                        Text("PDF'e göre AI destekli quiz oluşturmak için dosya yükleyin.")
+                            .multilineTextAlignment(.center)
+                            .foregroundColor(.gray)
+                            .padding(.horizontal)
+
+                        Button("PDF Seç") {
+                            showPicker = true
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.green)
+                        .background(Color.blue)
                         .foregroundColor(.white)
                         .cornerRadius(8)
+                        .padding(.horizontal, 40)
                     }
-
-                } else {
-                    Text("PDF'e göre AI destekli quiz oluşturmak için dosya yükleyin.")
-                        .multilineTextAlignment(.center)
-                        .foregroundColor(.gray)
-
-                    Button("PDF Seç") {
-                        showPicker = true
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .background(Color.blue)
-                    .foregroundColor(.white)
-                    .cornerRadius(8)
                 }
 
-                // 🔁 NavigationLink ile Quiz'e geç
+                Spacer()
+
                 NavigationLink(destination: QuizQuestionView(questions: generatedQuestions),
                                isActive: $navigateToQuiz) {
                     EmptyView()
                 }
             }
-            .padding()
             .sheet(isPresented: $showPicker) {
                 DocumentPicker { url in
                     if let url = url {

@@ -22,26 +22,23 @@ struct GeminiScreen: View {
     var body: some View {
         ZStack {
             NavigationView {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 16) {
+                VStack(spacing: 0) {
+                    // ✅ PDF ekranı gibi tam mavi üst bar
+                    ZStack(alignment: .bottom) {
+                        Color.blue
+                            .edgesIgnoringSafeArea(.top)
 
-                        // 🔵 Mavi kutu başlık
-                        ZStack {
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.blue)
-                                .frame(maxWidth: .infinity)
-                                .frame(height: 70)
+                        Text("Üniversite Öğrencileri En Çok Ne Soruyor?")
+                            .foregroundColor(.white)
+                            .font(.system(size: 18, weight: .bold))
+                            .multilineTextAlignment(.center)
+                            .padding(.bottom, 12)
+                    }
+                    .frame(height: 80)
 
-                            Text("Üniversite Öğrencileri En Çok Ne Soruyor?")
-                                .foregroundColor(.white)
-                                .font(.system(size: 18, weight: .semibold))
-                                .multilineTextAlignment(.center)
-                                .padding(.horizontal)
-                        }
-                        .padding(.bottom, 8)
-
-                        // 🔹 Örnek sorular listesi
-                        VStack(spacing: 10) {
+                    // 🔹 Scroll içeriği
+                    ScrollView {
+                        VStack(spacing: 12) {
                             ForEach(sampleQuestions, id: \.self) { question in
                                 Button(action: {
                                     prompt = question
@@ -56,13 +53,12 @@ struct GeminiScreen: View {
                                 }
                             }
                         }
-
-                        Spacer()
-                            .frame(height: 100)
+                        .padding()
+                        .padding(.top, 8)
                     }
-                    .padding()
+
+                    Spacer()
                 }
-                .navigationTitle("")
                 .navigationBarHidden(true)
             }
 

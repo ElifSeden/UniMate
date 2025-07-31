@@ -10,7 +10,7 @@ struct QuizQuestionView: View {
     @State private var userAnswer: String = ""
     @State private var aiFeedback: String = ""
     @State private var showingFeedback: Bool = false
-    @State private var isEvaluating: Bool = false // ✅ Yükleniyor göstergesi
+    @State private var isEvaluating: Bool = false
 
     func normalize(_ text: String) -> String {
         return text
@@ -21,148 +21,156 @@ struct QuizQuestionView: View {
     }
 
     var body: some View {
-        VStack(spacing: 20) {
-            if questions.isEmpty {
-                ProgressView("Sorular hazırlanıyor...")
-                    .progressViewStyle(CircularProgressViewStyle())
-                    .padding()
-                Text("Lütfen bekleyin, AI soruları oluşturuyor.")
-                    .foregroundColor(.gray)
-            } else {
-                let question = questions[currentIndex]
+        ScrollView {
+            VStack(spacing: 20) {
 
-                // 🔹 Soru numarası
-                Text("Soru \(currentIndex + 1)/\(questions.count)")
-                    .font(.headline)
+                // ✅ Üst başlık kutusu
+                Text("Quiz")
+                    .font(.title2.bold())
+                    .foregroundColor(.white)
+                    .padding(.vertical, 12)
+                    .frame(maxWidth: .infinity)
+                    .background(Color.blue)
+                    .cornerRadius(12)
+                    .padding(.top, 16)
 
-                // 🔹 Soru metni
-                Text(question.question)
-                    .font(.title3)
-                    .multilineTextAlignment(.leading)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .padding(.horizontal)
-
-                if question.type == .openEnded {
-                    // Açık uçlu soru UI
-                    Text("Cevabınızı Yazın:")
-                        .font(.subheadline)
-                        .frame(maxWidth: .infinity, alignment: .leading)
-
-                    TextEditor(text: $userAnswer)
-                        .frame(height: 150)
+                if questions.isEmpty {
+                    ProgressView("Sorular hazırlanıyor...")
+                        .progressViewStyle(CircularProgressViewStyle())
                         .padding()
-                        .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray.opacity(0.4)))
+                    Text("Lütfen bekleyin, AI soruları oluşturuyor.")
+                        .foregroundColor(.gray)
+                } else {
+                    let question = questions[currentIndex]
 
-                    Button(action: {
-                        evaluateOpenEndedAnswer(question: question.question, userAnswer: userAnswer)
-                    }) {
-                        Text("Cevabı Değerlendir")
-                            .foregroundColor(.white)
+                    // 🔹 Soru numarası
+                    Text("Soru \(currentIndex + 1)/\(questions.count)")
+                        .font(.headline)
+
+                    // 🔹 Soru metni
+                    Text(question.question)
+                        .font(.title3)
+                        .multilineTextAlignment(.leading)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal)
+
+                    if question.type == .openEnded {
+                        Text("Cevabınızı Yazın:")
+                            .font(.subheadline)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+
+                        TextEditor(text: $userAnswer)
+                            .frame(height: 150)
                             .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.orange)
-                            .cornerRadius(10)
-                    }
-
-                    if isEvaluating {
-                        ProgressView("AI cevabınızı değerlendiriyor...")
-                            .padding()
-                    } else if showingFeedback {
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text("AI Geri Bildirimi")
-                                .font(.headline)
-
-                            DisclosureGroup("Detaylı Geri Bildirim") {
-                                Text(aiFeedback)
-                                    .foregroundColor(.gray)
-                                    .padding(.top, 4)
-                            }
-                            .padding()
-                            .background(Color.yellow.opacity(0.2))
-                            .cornerRadius(8)
-
-                            Button("Sonraki Soru") {
-                                nextQuestion()
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity)
-                            .background(Color.orange.opacity(0.2))
-                            .cornerRadius(10)
-                            .foregroundColor(.orange)
-                        }
-                    }
-
-
-                } else if let options = question.options {
-                    // Seçmeli soru UI
-                    ForEach(options, id: \.self) { option in
-
-                        let isSelected = selectedAnswer == option
-                        let isCorrect = normalize(option) == normalize(question.correctAnswer)
+                            .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.gray.opacity(0.4)))
 
                         Button(action: {
-                            selectedAnswer = option
-                            showExplanation = true
+                            evaluateOpenEndedAnswer(question: question.question, userAnswer: userAnswer)
                         }) {
-                            HStack {
-                                Text(option)
-                                    .foregroundColor(.blue)
-                                Spacer()
-                                if isSelected {
-                                    Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
-                                        .foregroundColor(isCorrect ? .green : .red)
-                                }
-                            }
-                            .padding()
-                            .background(Color(.systemGray6))
-                            .cornerRadius(8)
+                            Text("Cevabı Değerlendir")
+                                .foregroundColor(.white)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                                .background(Color.orange)
+                                .cornerRadius(10)
                         }
-                        .disabled(showExplanation)
-                    }
 
-                    if showExplanation {
-                        let isCorrect = normalize(selectedAnswer ?? "") == normalize(question.correctAnswer)
+                        if isEvaluating {
+                            ProgressView("AI cevabınızı değerlendiriyor...")
+                                .padding()
+                        } else if showingFeedback {
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text("AI Geri Bildirimi")
+                                    .font(.headline)
 
-                        VStack(alignment: .leading, spacing: 12) {
-                            Text(isCorrect ? "✅ Doğru!" : "❌ Yanlış")
-                                .font(.headline)
-                                .foregroundColor(isCorrect ? .green : .red)
+                                DisclosureGroup("Detaylı Geri Bildirim") {
+                                    Text(aiFeedback)
+                                        .foregroundColor(.gray)
+                                        .padding(.top, 4)
+                                }
+                                .padding()
+                                .background(Color.yellow.opacity(0.2))
+                                .cornerRadius(8)
 
-                            Text("Açıklama: \(question.explanation)")
-                                .foregroundColor(.gray)
-
-                            Text("📌 Kaynak: \(question.referenceText)")
-                                .font(.footnote)
-                                .foregroundColor(.blue)
-
-                            Text("📄 Bu soru PDF içeriğinden AI tarafından hazırlanmıştır.")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-
-                            Button(action: {
-                                nextQuestion()
-                            }) {
-                                HStack {
-                                    Image(systemName: "arrow.right.circle.fill")
-                                    Text("Sonraki Soru")
+                                Button("Sonraki Soru") {
+                                    nextQuestion()
                                 }
                                 .padding()
                                 .frame(maxWidth: .infinity)
                                 .background(Color.orange.opacity(0.2))
+                                .cornerRadius(10)
                                 .foregroundColor(.orange)
-                                .cornerRadius(12)
                             }
                         }
-                        .padding(.top)
+
+                    } else if let options = question.options {
+                        ForEach(options, id: \.self) { option in
+                            let isSelected = selectedAnswer == option
+                            let isCorrect = normalize(option) == normalize(question.correctAnswer)
+
+                            Button(action: {
+                                selectedAnswer = option
+                                showExplanation = true
+                            }) {
+                                HStack {
+                                    Text(option)
+                                        .foregroundColor(.blue)
+                                    Spacer()
+                                    if isSelected {
+                                        Image(systemName: isCorrect ? "checkmark.circle.fill" : "xmark.circle.fill")
+                                            .foregroundColor(isCorrect ? .green : .red)
+                                    }
+                                }
+                                .padding()
+                                .background(Color(.systemGray6))
+                                .cornerRadius(8)
+                            }
+                            .disabled(showExplanation)
+                        }
+
+                        if showExplanation {
+                            let isCorrect = normalize(selectedAnswer ?? "") == normalize(question.correctAnswer)
+
+                            VStack(alignment: .leading, spacing: 12) {
+                                Text(isCorrect ? "✅ Doğru!" : "❌ Yanlış")
+                                    .font(.headline)
+                                    .foregroundColor(isCorrect ? .green : .red)
+
+                                Text("Açıklama: \(question.explanation)")
+                                    .foregroundColor(.gray)
+
+                                Text("📌 Kaynak: \(question.referenceText)")
+                                    .font(.footnote)
+                                    .foregroundColor(.blue)
+
+                                Text("📄 Bu soru PDF içeriğinden AI tarafından hazırlanmıştır.")
+                                    .font(.caption)
+                                    .foregroundColor(.gray)
+
+                                Button(action: {
+                                    nextQuestion()
+                                }) {
+                                    HStack {
+                                        Image(systemName: "arrow.right.circle.fill")
+                                        Text("Sonraki Soru")
+                                    }
+                                    .padding()
+                                    .frame(maxWidth: .infinity)
+                                    .background(Color.orange.opacity(0.2))
+                                    .foregroundColor(.orange)
+                                    .cornerRadius(12)
+                                }
+                            }
+                            .padding(.top)
+                        }
                     }
                 }
             }
+            .padding()
         }
-        .padding()
-        .navigationTitle("Quiz")
+        .navigationBarHidden(true) // Üst barı gizle, sadece kendi başlığını kullan
     }
 
-    // ✅ Sonraki soru geçişi
     func nextQuestion() {
         if currentIndex + 1 < questions.count {
             currentIndex += 1
@@ -175,7 +183,6 @@ struct QuizQuestionView: View {
         }
     }
 
-    // ✅ AI açık uçlu cevap değerlendirmesi
     func evaluateOpenEndedAnswer(question: String, userAnswer: String) {
         let prompt = """
         Aşağıda bir öğrencinin klasik sınavda yazdığı cevap yer alıyor. Lütfen bu cevabı değerlendir:
@@ -191,15 +198,14 @@ struct QuizQuestionView: View {
         Türkçe ve yapıcı bir dille açıkla.
         """
 
-        isEvaluating = true // Spinner başlasın
+        isEvaluating = true
 
         GeminiService.shared.generateText(from: prompt) { response in
             DispatchQueue.main.async {
                 self.aiFeedback = response ?? "AI'dan cevap alınamadı."
                 self.showingFeedback = true
-                self.isEvaluating = false // Spinner dursun
+                self.isEvaluating = false
             }
         }
     }
-
 }
