@@ -40,14 +40,16 @@ struct HomeView: View {
 
                     // MARK: - Header
                     HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("Hi, \(userProfile?.name ?? "User")")
+                        // Burayı HStack içine alıp iki ayrı Text olarak renklendiriyoruz
+                        HStack(spacing: 0) {
+                            Text("Welcome ")
                                 .font(.title)
                                 .bold()
-
-                            Text("")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
+                                .foregroundColor(.orange.opacity(0.8))
+                            Text("User!")
+                                .font(.title)
+                                .bold()
+                                .foregroundColor(.purple.opacity(0.8))
                         }
                         Spacer()
                         Button(action: {
@@ -65,19 +67,26 @@ struct HomeView: View {
 
                     // MARK: - Weekly Calendar View
                     MiniWeekTrackerView(selectedDate: $selectedDate, weekOffset: $weekOffset)
-
+                   
                     // MARK: - Add Exam
+
                     Button(action: {
                         showingAddExam = true
                     }) {
                         Text("Add Exam")
+                            .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding()
-                            .background(Color.blue)
+                            .background(
+                                LinearGradient(
+                                    gradient: Gradient(colors: [Color.purple, Color.orange]),
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
                             .foregroundColor(.white)
                             .cornerRadius(16)
                     }
-
                     // MARK: - En Yakın 3 Sınav
                     if !exams.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
@@ -150,12 +159,14 @@ struct HomeView: View {
                     // MARK: - Weekly Schedule
                     VStack(spacing: 12) {
                         HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text("Weekly Schedule")
+                            // Burada da aynı mantıkla iki renkli metin
+                            HStack(spacing: 0) {
+                                Text("Weekly ")
                                     .font(.title2.bold())
-                                Text("Your weekly courses")
-                                    .font(.subheadline)
-                                    .foregroundColor(.gray)
+                                    .foregroundColor(.orange.opacity(0.8))
+                                Text("Schedule")
+                                    .font(.title2.bold())
+                                    .foregroundColor(.purple.opacity(0.8))
                             }
                             Spacer()
                             Button(action: {
@@ -175,6 +186,7 @@ struct HomeView: View {
 
                         GridTimetableView(courses: $courses)
                     }
+
                 }
                 .padding()
             }
@@ -369,4 +381,4 @@ struct HomeView: View {
             }
         }
     }
-}
+} 
