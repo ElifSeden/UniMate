@@ -10,6 +10,7 @@ struct GridTimetableView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            // Gün başlıkları
             HStack(spacing: 0) {
                 Text("").frame(width: 40)
                 ForEach(days, id: \.self) { day in
@@ -22,28 +23,43 @@ struct GridTimetableView: View {
                 }
             }
 
+            // Saat satırları
             ForEach(hours, id: \.self) { hour in
                 HStack(spacing: 0) {
-                    Text("\(hour)").frame(width: 40)
+                    Text("\(hour)")
+                        .frame(width: 40)
                         .font(.system(size: 13, weight: .semibold))
                         .foregroundColor(.gray)
 
                     ForEach(days, id: \.self) { day in
-                        let course = courseAt(day: day, hour: hour)
+                        let courseList = coursesAt(day: day, hour: hour)
+
                         ZStack {
                             Rectangle().stroke(Color.gray.opacity(0.3), lineWidth: 1)
-                            if let course = course {
-                                Text(course.name)
-                                    .font(.caption2)
-                                    .padding(4)
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                                    .background(course.color)
-                                    .cornerRadius(4)
-                                    .foregroundColor(.white)
-                                    .onTapGesture {
-                                        selectedCourse = course
-                                        showingEditSheet = true
+
+                            if !courseList.isEmpty {
+                                VStack(spacing: 2) {
+                                    ForEach(courseList.prefix(2)) { course in
+                                        Text(course.name)
+                                            .font(.caption2)
+                                            .padding(2)
+                                            .frame(maxWidth: .infinity)
+                                            .background(course.color)
+                                            .cornerRadius(4)
+                                            .foregroundColor(.white)
+                                            .onTapGesture {
+                                                selectedCourse = course
+                                                showingEditSheet = true
+                                            }
                                     }
+
+                                    if courseList.count > 2 {
+                                        Text("+\(courseList.count - 2) more")
+                                            .font(.caption2)
+                                            .foregroundColor(.gray)
+                                    }
+                                }
+                                .padding(2)
                             }
                         }
                         .frame(maxWidth: .infinity, minHeight: 30)
@@ -65,8 +81,9 @@ struct GridTimetableView: View {
         }
     }
 
-    func courseAt(day: String, hour: Int) -> Course? {
-        return courses.first {
+    // ✅ Aynı hücreye düşen tüm dersleri bulur
+    func coursesAt(day: String, hour: Int) -> [Course] {
+        return courses.filter {
             $0.day.prefix(3).lowercased() == day.lowercased() && $0.hour == hour
         }
     }

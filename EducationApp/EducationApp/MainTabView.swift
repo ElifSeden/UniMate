@@ -16,6 +16,13 @@ struct MainTabView: View {
                     Label("PDF", systemImage: "doc.text.magnifyingglass")
                 }
                 .tag(1)
+            
+            QuizMainView()
+                .tabItem {
+                    Label("Quiz", systemImage: "checklist")
+                }
+                .tag(4)
+
 
             GeminiScreen()
                 .tabItem {

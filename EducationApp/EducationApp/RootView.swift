@@ -1,9 +1,19 @@
 import SwiftUI
+import FirebaseAuth
 
 struct RootView: View {
-    @State private var selectedTab = 0  // 🔁 Sekme kontrolü için gerekli
+    @StateObject var authViewModel = AuthViewModel()
+    @State private var selectedTab = 0
 
     var body: some View {
-        MainTabView(selectedTab: $selectedTab)  // ✅ Parametre verildi
+        Group {
+            if authViewModel.isLoggedIn {
+                MainTabView(selectedTab: $selectedTab)
+                    .environmentObject(authViewModel)
+            } else {
+                AuthView()
+                    .environmentObject(authViewModel)
+            }
+        }
     }
 }

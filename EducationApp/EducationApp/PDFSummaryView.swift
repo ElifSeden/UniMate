@@ -4,19 +4,22 @@ import UniformTypeIdentifiers
 
 struct PDFSummaryView: View {
     @State private var selectedDocumentURL: URL?
-    @State private var extractedText: String = ""
     @State private var showPicker = false
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var summary: String?
-    @State private var isLoading = false // ✅ Yükleniyor durumu
+    @State private var isLoading = false
+    @State private var showQuizSetup = false
+    @State private var selectedQuizType = "Çoktan Seçmeli"
+    @State private var selectedQuizCount = 5
+
 
     let geminiService = GeminiService()
 
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // ——— SABİT BAŞLIK ———
+                // Başlık
                 HStack(spacing: 8) {
                     Image(systemName: "doc.text")
                         .font(.title2)
@@ -31,21 +34,19 @@ struct PDFSummaryView: View {
 
                 Divider()
 
-                // ——— KAYDIRILABİLİR İÇERİK ———
+                // İçerik
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         if let url = selectedDocumentURL {
                             Text("Seçili Dosya:")
                                 .font(.subheadline).bold()
                             Text(url.lastPathComponent)
-                                .font(.body)
                                 .foregroundColor(.gray)
 
                             if isLoading {
-                                // ✅ Spinner göster
                                 HStack {
                                     Spacer()
-                                    ProgressView("Özet çıkarılıyor...")
+                                    ProgressView("PDF özetleniyor...")
                                         .progressViewStyle(CircularProgressViewStyle(tint: .blue))
                                         .padding()
                                     Spacer()
@@ -60,9 +61,7 @@ struct PDFSummaryView: View {
                                     .cornerRadius(8)
                             } else {
                                 Text("Özet almak için “Özet Çıkar” butonuna basın.")
-                                    .font(.callout)
                                     .foregroundColor(.secondary)
-                                    .padding(.top, 8)
                             }
                         } else {
                             VStack(spacing: 12) {
@@ -82,24 +81,15 @@ struct PDFSummaryView: View {
 
                 Divider()
 
-                // ——— SABİT ALT BUTONLAR ———
+                // Butonlar
                 HStack(spacing: 16) {
                     Button("Özet Çıkar") {
                         guard let url = selectedDocumentURL else { return }
-                        extractedText = extractText(from: url)
-                        if !extractedText.isEmpty {
-                            isLoading = true // ✅ İşlem başladı
-                            geminiService.generateText(
-                                from: "Lütfen bu PDF'i özetle:\n\n\(extractedText)"
-                            ) { result in
-                                DispatchQueue.main.async {
-                                    self.summary = result ?? "Özet alınamadı."
-                                    self.isLoading = false // ✅ İşlem bitti
-                                }
-                            }
-                        } else {
-                            errorMessage = "PDF'ten metin alınamadı."
-                            showError = true
+                        isLoading = true
+                        let chunks = extractChunks(from: url, chunkSize: 5)
+                        summarizeChunks(chunks) { fullSummary in
+                            self.summary = fullSummary
+                            self.isLoading = false
                         }
                     }
                     .disabled(selectedDocumentURL == nil || isLoading)
@@ -119,7 +109,7 @@ struct PDFSummaryView: View {
                             .background(Color.blue)
                             .clipShape(Circle())
                     }
-                    .disabled(isLoading) // ✅ Özetlenirken engelle
+                    .disabled(isLoading)
                 }
                 .padding()
             }
@@ -140,10 +130,46 @@ struct PDFSummaryView: View {
         }
     }
 
-    private func extractText(from url: URL) -> String {
-        guard let doc = PDFDocument(url: url) else { return "" }
-        return (0..<doc.pageCount)
-            .compactMap { doc.page(at: $0)?.string }
-            .joined(separator: "\n")
+    // MARK: - Parça Parça Metin Çıkar
+    private func extractChunks(from url: URL, chunkSize: Int = 5) -> [String] {
+        guard let doc = PDFDocument(url: url) else { return [] }
+        var chunks: [String] = []
+        let totalPages = doc.pageCount
+        var index = 0
+        while index < totalPages {
+            let end = min(index + chunkSize, totalPages)
+            let chunk = (index..<end)
+                .compactMap { doc.page(at: $0)?.string }
+                .joined(separator: "\n")
+            chunks.append(chunk)
+            index += chunkSize
+        }
+        return chunks
+    }
+
+    // MARK: - Gemini ile Parça Parça Özetle
+    private func summarizeChunks(_ chunks: [String], completion: @escaping (String) -> Void) {
+        var fullSummary = ""
+        let group = DispatchGroup()
+
+        for chunk in chunks {
+            group.enter()
+            let prompt = """
+            Aşağıdaki PDF bölümünü öğrencinin anlayacağı şekilde kısa ve öğretici şekilde özetle.
+            Formül, tanım ve önemli bilgileri açıkla. Gereksiz detay verme:
+
+            \(chunk)
+            """
+            geminiService.generateText(from: prompt) { result in
+                if let partial = result {
+                    fullSummary += "\n\n\(partial)"
+                }
+                group.leave()
+            }
+        }
+
+        group.notify(queue: .main) {
+            completion(fullSummary.trimmingCharacters(in: .whitespacesAndNewlines))
+        }
     }
 }

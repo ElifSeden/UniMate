@@ -1,16 +1,18 @@
 import Foundation
 
 class GeminiService {
-    // ✅ Kendi API anahtarını buraya koy
+    // ✅ Ortak erişim noktası (singleton)
+    static let shared = GeminiService()
+
+    // ✅ API anahtarı
     private let apiKey = ""
 
-    // Ortak AI fonksiyonu
+    // ✅ AI metin üretimi
     func generateText(from prompt: String, completion: @escaping (String?) -> Void) {
-        // ✅ Yeni model ve versiyon
         guard let url = URL(string:
             "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=\(apiKey)")
         else {
-            print("Hata: Geçersiz URL oluşturuldu.")
+            print("Hata: Geçersiz URL.")
             completion(nil)
             return
         }
@@ -30,7 +32,7 @@ class GeminiService {
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
 
         guard let httpBody = try? JSONSerialization.data(withJSONObject: requestBody) else {
-            print("Hata: JSON formatına dönüştürülemedi.")
+            print("Hata: JSON dönüşümü başarısız.")
             completion(nil)
             return
         }
@@ -38,7 +40,6 @@ class GeminiService {
         request.httpBody = httpBody
 
         URLSession.shared.dataTask(with: request) { data, response, error in
-            // Hata kontrolü
             if let error = error {
                 print("Ağ Hatası: \(error.localizedDescription)")
                 completion(nil)
@@ -51,24 +52,21 @@ class GeminiService {
                 return
             }
 
-            // HTTP yanıtı ve durum kodu
             if let httpResponse = response as? HTTPURLResponse {
-                print("HTTP Durum Kodu: \(httpResponse.statusCode)")
+                print("HTTP Durum: \(httpResponse.statusCode)")
             }
 
-            // Yanıtı yazdır
             if let responseString = String(data: data, encoding: .utf8) {
                 print("Yanıt:\n\(responseString)")
             }
 
-            // JSON ayrıştırma
             guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                   let candidates = json["candidates"] as? [[String: Any]],
                   let content = candidates.first?["content"] as? [String: Any],
                   let parts = content["parts"] as? [[String: Any]],
                   let text = parts.first?["text"] as? String
             else {
-                print("Hata: JSON beklenen formatta değil.")
+                print("Hata: Yanıt beklenen formatta değil.")
                 completion(nil)
                 return
             }

@@ -27,6 +27,8 @@ struct HomeView: View {
     @State private var showingAddExam = false
     @State private var showingTimetable = false
     @State private var showingProfile = false
+    @State private var showingMoodCheck = false
+
     @State private var courses: [Course] = sampleCourses
     @State private var weekOffset: Int = 0
     @State private var userProfile: UserProfile? = nil
@@ -114,32 +116,36 @@ struct HomeView: View {
                         }
                     }
 
-                    // MARK: - Points Card
-                    HStack {
-                        VStack(alignment: .leading) {
-                            Text("\(points) Points")
-                                .font(.title2.bold())
-                            Text("Cross 500 this week to get a free\n1-on-1 class")
-                                .font(.subheadline)
-                                .foregroundColor(.gray)
+                    // MARK: - MoodCheck Paneli
+                    Button(action: {
+                        showingMoodCheck = true
+                    }) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("MoodCheck")
+                                    .font(.title2.bold())
+                                    .foregroundColor(.white)
+                                Text("Nasıl hissediyorsun? AI önerilerini al 💡")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.85))
+                            }
+                            Spacer()
+                            Image(systemName: "face.smiling.fill")
+                                .foregroundColor(.white)
+                                .font(.system(size: 28))
                         }
-                        Spacer()
-                        Button(action: {
-                            // test başlat
-                        }) {
-                            Text("Take test now")
-                                .padding()
-                                .background(Color.white)
-                                .foregroundColor(.purple)
-                                .cornerRadius(12)
-                        }
+                        .padding()
+                        .background(
+                            LinearGradient(colors: [.purple, .blue], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+                        .cornerRadius(20)
+                        .padding(.horizontal, 4)
                     }
-                    .padding()
-                    .background(
-                        LinearGradient(colors: [.purple, .blue], startPoint: .topLeading, endPoint: .bottomTrailing)
-                    )
-                    .foregroundColor(.white)
-                    .cornerRadius(20)
+                    .sheet(isPresented: $showingMoodCheck) {
+                        MoodCheckFullView()
+
+                    }
+
 
                     // MARK: - Weekly Schedule
                     VStack(spacing: 12) {
