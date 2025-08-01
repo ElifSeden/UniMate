@@ -2,7 +2,7 @@ import SwiftUI
 import FirebaseAuth
 import FirebaseFirestore
 
-// Basit notification modeli
+// Basit bildirim modeli
 struct AppNotification: Identifiable {
     let id: String
     let title: String
@@ -11,46 +11,55 @@ struct AppNotification: Identifiable {
 }
 
 struct NotificationsView: View {
-    @State private var notifications: [AppNotification] = []
+    // Örnek: 2 spam bildirim ile başlat
+    @State private var notifications: [AppNotification] = [
+        .init(id: "spam1",
+              title: "SPAM: Hemen tıklayın!",
+              body: "Ücretsiz hediye kazandınız! Acele edin.",
+              date: Date()),
+        .init(id: "spam2",
+              title: "SPAM: Hesabınız güncellendi!",
+              body: "Şifrenizi sıfırlamak için buraya tıklayın.",
+              date: Date().addingTimeInterval(-3600))
+    ]
     @State private var isNotificationsEnabled: Bool = UserDefaults.standard.bool(forKey: "isNotificationsEnabled")
-    @State private var isEditing = false
     @State private var selectedNotifications = Set<String>()
-    @State private var editMode: EditMode = .inactive  // ← Düzenleme modu için state
-    
+    @State private var showDeleteBar = false
+    @State private var showDeleteAlert = false
+
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
         VStack(spacing: 0) {
-            // Toggle + Seç / İptal butonu
-            VStack(spacing: 0) {
-                HStack {
-                    Text("Bildirimleri Aç/Kapat")
-                        .font(.subheadline)
-                    Spacer()
-                    Toggle("", isOn: $isNotificationsEnabled)
-                        .labelsHidden()
-                        .onChange(of: isNotificationsEnabled) { newValue in
-                            UserDefaults.standard.set(newValue, forKey: "isNotificationsEnabled")
-                            // UNUserNotificationCenter güncellemesi ekleyebilirsin
-                        }
-                }
-                .padding()
-                .background(Color(.systemGray6))
-                
-                HStack {
-                    Spacer()
-                    Button(isEditing ? "İptal" : "Seç") {
-                        withAnimation {
-                            isEditing.toggle()
-                            editMode = isEditing ? .active : .inactive
-                            if !isEditing {
-                                selectedNotifications.removeAll()
-                            }
-                        }
+            // Bildirimleri Aç/Kapat toggle
+            HStack {
+                Text("Bildirimleri Aç/Kapat")
+                    .font(.subheadline)
+                Spacer()
+                Toggle("", isOn: $isNotificationsEnabled)
+                    .labelsHidden()
+                    .onChange(of: isNotificationsEnabled) { newValue in
+                        UserDefaults.standard.set(newValue, forKey: "isNotificationsEnabled")
+                        // UNUserNotificationCenter güncellemesini buraya ekle
                     }
-                    .padding(.vertical, 8)
+            }
+            .padding()
+            .background(Color(.systemGray6))
+
+            // Uzun basınca çöp kutusu barı
+            if showDeleteBar {
+                HStack {
+                    Spacer()
+                    Button {
+                        showDeleteAlert = true
+                    } label: {
+                        Image(systemName: "trash.circle.fill")
+                            .font(.system(size: 44))
+                            .foregroundColor(.red)
+                    }
                     Spacer()
                 }
+                .padding(.bottom)
                 .background(Color(.systemGray6))
             }
 
@@ -61,7 +70,7 @@ struct NotificationsView: View {
                     .foregroundColor(.gray)
                 Spacer()
             } else {
-                List(selection: $selectedNotifications) {
+                List {
                     ForEach(notifications) { notif in
                         VStack(alignment: .leading, spacing: 4) {
                             Text(notif.title)
@@ -74,37 +83,32 @@ struct NotificationsView: View {
                                 .foregroundColor(.gray)
                         }
                         .padding(.vertical, 6)
+                        .background(
+                            selectedNotifications.contains(notif.id)
+                                ? Color.red.opacity(0.1)
+                                : Color.clear
+                        )
+                        .cornerRadius(8)
+                        .onLongPressGesture {
+                            if selectedNotifications.contains(notif.id) {
+                                selectedNotifications.remove(notif.id)
+                            } else {
+                                selectedNotifications.insert(notif.id)
+                            }
+                            showDeleteBar = !selectedNotifications.isEmpty
+                        }
                     }
                 }
                 .listStyle(InsetGroupedListStyle())
             }
 
-            // Alt butonlar: Tümünü sil / Seçilenleri sil
-            if !notifications.isEmpty {
-                HStack {
-                    Button("Tüm bildirimleri sil") {
-                        deleteAll()
-                    }
-                    .foregroundColor(.red)
-                    
-                    Spacer()
-                    
-                    if isEditing {
-                        Button("Seçilenleri Sil (\(selectedNotifications.count))") {
-                            deleteSelected()
-                        }
-                        .foregroundColor(.red)
-                        .disabled(selectedNotifications.isEmpty)
-                    }
-                }
-                .padding()
-                .background(Color(.systemGray6))
-            }
+            Spacer()
         }
         .navigationTitle("Bildirimler")
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
+            // Geri butonu
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
                     dismiss()
@@ -115,20 +119,31 @@ struct NotificationsView: View {
                     }
                 }
             }
+            // Sağ üstte durum metni
             ToolbarItem(placement: .navigationBarTrailing) {
                 Text(isNotificationsEnabled ? "Bildirim var" : "Bildirim yok")
                     .foregroundColor(.gray)
                     .font(.footnote)
             }
         }
-        // İşte buraya:
-        .environment(\.editMode, $editMode)
+        // Silme onayı alert'i
+        .alert(
+            "\(selectedNotifications.count) bildirim silmek istediğinize emin misiniz?",
+            isPresented: $showDeleteAlert
+        ) {
+            Button("Evet", role: .destructive) { deleteSelected() }
+            Button("İptal", role: .cancel) {
+                selectedNotifications.removeAll()
+                showDeleteBar = false
+            }
+        }
         .onAppear(perform: fetchNotifications)
     }
 
     private func fetchNotifications() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
+
         db.collection("users")
           .document(uid)
           .collection("notifications")
@@ -138,7 +153,12 @@ struct NotificationsView: View {
                 print("📭 Bildirimler alınamadı: \(error)")
                 return
             }
-            notifications = snapshot?.documents.compactMap { doc in
+
+            // Önce dokümanları al
+            let docs = snapshot?.documents ?? []
+
+            // Ardından net bir [AppNotification] dizisine dönüştür
+            let fetched: [AppNotification] = docs.compactMap { doc in
                 let data = doc.data()
                 let title = data["title"] as? String ?? ""
                 let body  = data["body"]  as? String ?? ""
@@ -149,26 +169,11 @@ struct NotificationsView: View {
                     body: body,
                     date: ts?.dateValue() ?? Date()
                 )
-            } ?? []
-        }
-    }
+            }
 
-    private func deleteAll() {
-        guard let uid = Auth.auth().currentUser?.uid else { return }
-        let db = Firestore.firestore()
-        let batch = db.batch()
-        let col = db.collection("users").document(uid).collection("notifications")
-        notifications.forEach { notif in
-            batch.deleteDocument(col.document(notif.id))
-        }
-        batch.commit { error in
-            if let error = error {
-                print("❌ Tümünü silme hatası: \(error)")
-            } else {
-                notifications.removeAll()
-                selectedNotifications.removeAll()
-                isEditing = false
-                editMode = .inactive
+            // Eğer gerçekten yeni bildirim geldiyse listeyi güncelle
+            if !fetched.isEmpty {
+                notifications = fetched
             }
         }
     }
@@ -176,17 +181,17 @@ struct NotificationsView: View {
     private func deleteSelected() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()
+        let batch = db.batch()
         let col = db.collection("users").document(uid).collection("notifications")
+
         selectedNotifications.forEach { id in
-            col.document(id).delete { error in
-                if let error = error {
-                    print("❌ Silme hatası (\(id)): \(error)")
-                }
-            }
+            batch.deleteDocument(col.document(id))
         }
-        notifications.removeAll { selectedNotifications.contains($0.id) }
-        selectedNotifications.removeAll()
-        isEditing = false
-        editMode = .inactive
+
+        batch.commit { _ in
+            notifications.removeAll { selectedNotifications.contains($0.id) }
+            selectedNotifications.removeAll()
+            showDeleteBar = false
+        }
     }
 }
