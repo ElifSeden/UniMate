@@ -52,18 +52,16 @@ struct HomeView: View {
                                 .foregroundColor(.purple.opacity(0.8))
                         }
                         Spacer()
-                        Button(action: {
-                            showingProfile = true
-                        }) {
-                            Image(systemName: "person.crop.circle.fill")
-                                .resizable()
-                                .frame(width: 44, height: 44)
-                                .foregroundColor(.gray)
-                        }
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(16)
+                        NavigationLink(destination: MenuView(selectedTab: $selectedTab)) {
+                               Image(systemName: "person.crop.circle.fill")
+                                   .resizable()
+                                   .frame(width: 44, height: 44)
+                                   .foregroundColor(.gray)
+                           }
+                       }
+                       .padding()
+                       .background(Color(.systemGray6))
+                       .cornerRadius(16)
 
                     // MARK: - Weekly Calendar View
                     MiniWeekTrackerView(selectedDate: $selectedDate, weekOffset: $weekOffset)
