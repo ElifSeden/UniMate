@@ -153,6 +153,8 @@ struct HomeView: View {
 
                     }
 
+                    AIDetectorView()
+                        .padding(.top, 8)
 
                     // MARK: - Weekly Schedule
                     VStack(spacing: 12) {
@@ -183,9 +185,12 @@ struct HomeView: View {
                         .cornerRadius(20)
 
                         GridTimetableView(courses: $courses)
+                        
                     }
-
+                    
+                    
                 }
+               
                 .padding()
             }
             .navigationBarHidden(true)
@@ -379,4 +384,4 @@ struct HomeView: View {
             }
         }
     }
-} 
+}

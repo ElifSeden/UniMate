@@ -3,6 +3,7 @@ import Firebase
 
 @main
 struct EducationAppApp: App {
+    @StateObject var usageTracker = AppUsageTracker() // ✅ Zaman takibi başlatıldı
 
     init() {
         FirebaseApp.configure()
@@ -10,7 +11,8 @@ struct EducationAppApp: App {
 
     var body: some Scene {
         WindowGroup {
-            RootView() // Burada artık kullanıcı giriş yaptı mı kontrol ediyoruz
+            RootView()
+                .environmentObject(usageTracker) // ✅ Tüm uygulamaya dağıt
         }
     }
 }

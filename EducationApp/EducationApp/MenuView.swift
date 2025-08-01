@@ -61,10 +61,9 @@ struct MenuView: View {
                 .padding(.vertical, 6)
             }
 
-            // 4. Zaman Yönetimi
+            // 4. Zaman Yönetimi (GERÇEK EKRAN)
             NavigationLink {
-                Text("Zaman Yönetimi Ekranı")
-                    .navigationTitle("Zaman Yönetimi")
+                ZamanYonetimiView()
             } label: {
                 HStack(spacing: 16) {
                     Image(systemName: "clock")
