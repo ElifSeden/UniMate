@@ -81,6 +81,7 @@ struct MenuView: View {
 
             // 5. Ayarlar
             NavigationLink {
+                SettingsView()
                 Text("Ayarlar Ekranı")
                     .navigationTitle("Ayarlar")
             } label: {

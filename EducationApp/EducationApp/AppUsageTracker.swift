@@ -1,38 +1,75 @@
 import Foundation
-import SwiftUI
+import UserNotifications
 
+/// Uygulama kullanımını takip eder ve günlük limit aşıldığında bildirim gönderir.
 class AppUsageTracker: ObservableObject {
-    @Published var totalSecondsToday: TimeInterval = 0
-    private var sessionStart: Date?
-
+    /// Şu ana kadar bugüne kadar toplanan toplam saniye
+    @Published var totalSecondsToday: TimeInterval = 0 {
+        didSet { checkLimit() }
+    }
+    
+    /// Kullanıcının ayarladığı günlük süre limiti (saniye cinsinden)
+    @Published var dailyLimitSeconds: TimeInterval {
+        didSet {
+            saveLimit()
+            checkLimit()
+        }
+    }
+    
+    /// Aynı gün içinde bir kez bildirim atmak için flag
+    private var hasSentNotification = false
+    
     init() {
-        loadSavedTime()
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(appDidEnterBackground),
-                                               name: UIApplication.willResignActiveNotification,
-                                               object: nil)
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(appDidBecomeActive),
-                                               name: UIApplication.didBecomeActiveNotification,
-                                               object: nil)
+        // Daha önce kaydettiysek yükle, yoksa 0 (yani bildirim kapalı)
+        dailyLimitSeconds = UserDefaults.standard.double(forKey: "dailyLimitSeconds")
+        
+        // Bildirim yetkisini iste
+        UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
+            if let err = error {
+                print("Bildirim yetkisi alınırken hata: \(err)")
+            }
+        }
+        
+        // … burada totalSecondsToday’ı yükleme veya gerçek zamanlı güncelleme mantığını da ekleyebilirsin.
     }
-
-    @objc func appDidBecomeActive() {
-        sessionStart = Date()
+    
+    private func saveLimit() {
+        UserDefaults.standard.set(dailyLimitSeconds, forKey: "dailyLimitSeconds")
     }
-
-    @objc func appDidEnterBackground() {
-        guard let start = sessionStart else { return }
-        let sessionTime = Date().timeIntervalSince(start)
-        totalSecondsToday += sessionTime
-        saveTime()
+    
+    /// Her `totalSecondsToday` değiştiğinde burası tetiklenir
+    private func checkLimit() {
+        guard dailyLimitSeconds > 0,
+              totalSecondsToday >= dailyLimitSeconds,
+              !hasSentNotification else { return }
+        
+        scheduleLimitReachedNotification()
+        hasSentNotification = true
     }
-
-    func saveTime() {
-        UserDefaults.standard.set(totalSecondsToday, forKey: "totalSecondsToday")
+    
+    private func scheduleLimitReachedNotification() {
+        let content = UNMutableNotificationContent()
+        content.title = "Kullanım Süreniz Doldu"
+        content.body = "Bugünkü kullanım süreniz \(formatTime(dailyLimitSeconds)) olarak ayarlanmıştı."
+        
+        // Anında gönder
+        let request = UNNotificationRequest(
+            identifier: "dailyLimitReached",
+            content: content,
+            trigger: nil
+        )
+        
+        UNUserNotificationCenter.current().add(request) { error in
+            if let err = error {
+                print("Bildirim gönderilemedi: \(err)")
+            }
+        }
     }
-
-    func loadSavedTime() {
-        totalSecondsToday = UserDefaults.standard.double(forKey: "totalSecondsToday")
+    
+    private func formatTime(_ seconds: TimeInterval) -> String {
+        let minutes = Int(seconds) / 60
+        let hours = minutes / 60
+        let rem = minutes % 60
+        return "\(hours) saat \(rem) dakika"
     }
 }
