@@ -3,6 +3,7 @@ import FirebaseFirestore
 import FirebaseAuth
 import UserNotifications // ✅ Bildirim için eklendi
 
+// Kullanıcı profili modeli
 struct UserProfile {
     let name: String
     let surname: String
@@ -32,59 +33,233 @@ struct HomeView: View {
     @State private var showingParaphrase = false
     @State private var showingTodoList = false
 
-
     @State private var courses: [Course] = sampleCourses
     @State private var weekOffset: Int = 0
     @State private var userProfile: UserProfile? = nil
 
     var body: some View {
         NavigationView {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
+            // ← DÜZENLENDİ: VStack ile header’ı ScrollView dışına aldık
+            VStack(spacing: 0) {
 
-                    // MARK: - Header
-                    ZStack(alignment: .bottom) {
-                        Color.blue
-                            .ignoresSafeArea(edges: .top)
-                            .frame(height: 120)
+                // MARK: - HEADER
+                ZStack {
+                    // ← DÜZENLENDİ: SafeArea üstünü mavi kapla
+                    Color.blue
+                        .ignoresSafeArea(edges: .top)
 
-                        HStack {
-                            HStack(spacing: 0) {
-                                Text("Hoşgeldin ")
-                                    .font(.title)
-                                    .bold()
-                                    .foregroundColor(.white)
+                    // ← DÜZENLENDİ: Yazı ve ikon ortada yatay düzlemde
+                    HStack(spacing: 12) {
+                        Text("Hoşgeldin \(userProfile?.name ?? "User")!")
+                            .font(.title).bold()
+                            .foregroundColor(.white)
+                        NavigationLink(destination: MenuView(selectedTab: $selectedTab)) {
+                            Image(systemName: "person.crop.circle.fill")
+                                .resizable()
+                                .frame(width: 32, height: 32)
+                                .foregroundColor(.white)
+                        }
+                    }
+                    .frame(maxWidth: .infinity)
+                }
+                .frame(height: 120)  // header yüksekliği
 
-                                Text("\(userProfile?.name ?? "User")!")
-                                    .font(.title)
-                                    .bold()
-                                    .foregroundColor(.white)
-                            }
+                // MARK: - Scrollable İçerik
+                ScrollView {
+                    VStack(alignment: .leading, spacing: 24) {
 
-                            Spacer()
+                        // MARK: - Weekly Calendar View
+                        MiniWeekTrackerView(selectedDate: $selectedDate, weekOffset: $weekOffset)
 
-                            NavigationLink(destination: MenuView(selectedTab: $selectedTab)) {
-                                Image(systemName: "person.crop.circle.fill")
-                                    .resizable()
-                                    .frame(width: 44, height: 44)
-                                    .foregroundColor(.white)
+                        // MARK: - Add Exam
+                        Button(action: {
+                            showingAddExam = true
+                        }) {
+                            Text("Sınav Ekle")
+                                .font(.headline)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(
+                                    LinearGradient(
+                                        gradient: Gradient(colors: [Color.cyan, Color.blue]),
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                )
+                                .foregroundColor(.white)
+                                .cornerRadius(16)
+                        }
+
+                        // MARK: - En Yakın 3 Sınav
+                        if !exams.isEmpty {
+                            VStack(alignment: .leading, spacing: 8) {
+                                HStack {
+                                    Text("Upcoming Exams")
+                                        .font(.headline)
+                                    Spacer()
+                                    Button("See All") {
+                                        showingAllExams = true
+                                    }
+                                    .font(.subheadline)
+                                }
+
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 12) {
+                                        ForEach(upcomingExams.prefix(3)) { exam in
+                                            VStack(alignment: .leading, spacing: 4) {
+                                                Text(exam.subject)
+                                                    .font(.body.bold())
+                                                Text(exam.date, style: .date)
+                                                    .font(.caption)
+                                                    .foregroundColor(.gray)
+                                                if !exam.note.isEmpty {
+                                                    Text(exam.note)
+                                                        .font(.callout)
+                                                        .foregroundColor(.secondary)
+                                                }
+                                            }
+                                            .padding()
+                                            .frame(width: 160)
+                                            .background(Color(.systemGray6))
+                                            .cornerRadius(12)
+                                        }
+                                    }
+                                }
                             }
                         }
-                        .padding(.horizontal)
-                        .padding(.top, 50)
-                    }
 
+                        // MARK: - MoodCheck + AI Detector (Yan Yana)
+                        HStack(spacing: 12) {
+                            Button(action: {
+                                showingMoodCheck = true
+                            }) {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("MoodCheck")
+                                        .font(.title2.bold())
+                                        .foregroundColor(.white)
+                                    Text("Nasıl hissediyorsun? AI önerilerini al 💡")
+                                        .font(.subheadline)
+                                        .foregroundColor(.white.opacity(0.85))
+                                    Spacer()
+                                    Image(systemName: "face.smiling.fill")
+                                        .foregroundColor(.white)
+                                        .font(.system(size: 28))
+                                }
+                                .padding()
+                                .frame(width: UIScreen.main.bounds.width * 0.45, height: 140)
+                                .background(
+                                    LinearGradient(colors: [.orange, .yellow], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                )
+                                .cornerRadius(20)
+                            }
+                            .sheet(isPresented: $showingMoodCheck) {
+                                MoodCheckFullView()
+                            }
 
-                    // MARK: - Weekly Calendar View
-                    MiniWeekTrackerView(selectedDate: $selectedDate, weekOffset: $weekOffset)
+                            Button(action: {
+                                showingAIDetector = true
+                            }) {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("AI Detector")
+                                        .font(.title2.bold())
+                                        .foregroundColor(.white)
+                                    Text("Metni yapıştır, AI oranını öğren")
+                                        .font(.subheadline)
+                                        .foregroundColor(.white.opacity(0.85))
+                                    Spacer()
+                                    Image(systemName: "arrow.right.circle.fill")
+                                        .foregroundColor(.white)
+                                        .font(.system(size: 28))
+                                }
+                                .padding()
+                                .frame(width: UIScreen.main.bounds.width * 0.45, height: 140)
+                                .background(
+                                    LinearGradient(colors: [.purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                )
+                                .cornerRadius(20)
+                            }
+                            .sheet(isPresented: $showingAIDetector) {
+                                AIDetectorView()
+                            }
+                        }
 
-                    // MARK: - Add Exam
-                    Button(action: {
-                        showingAddExam = true
-                    }) {
-                        Text("Sınav Ekle")
-                            .font(.headline)
-                            .frame(maxWidth: .infinity)
+                        // MARK: - Paraphrase + Görevlerim (Alt Satır)
+                        HStack(spacing: 12) {
+                            // Paraphrase Kutusu
+                            Button(action: {
+                                showingParaphrase = true
+                            }) {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("Paraphrase")
+                                        .font(.title2.bold())
+                                        .foregroundColor(.white)
+                                    Text("AI çıkmasın, öğrenci gibi yaz")
+                                        .font(.subheadline)
+                                        .foregroundColor(.white.opacity(0.85))
+                                    Spacer()
+                                    Image(systemName: "text.append")
+                                        .foregroundColor(.white)
+                                        .font(.system(size: 28))
+                                }
+                                .padding()
+                                .frame(width: UIScreen.main.bounds.width * 0.45, height: 140)
+                                .background(
+                                    LinearGradient(colors: [.purple, .indigo], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                )
+                                .cornerRadius(20)
+                            }
+                            .sheet(isPresented: $showingParaphrase) {
+                                ParaphraseView()
+                            }
+
+                            // Görev Listesi Kutusu
+                            Button(action: {
+                                showingTodoList = true
+                            }) {
+                                VStack(alignment: .leading, spacing: 6) {
+                                    Text("Görevlerim")
+                                        .font(.title2.bold())
+                                        .foregroundColor(.white)
+                                    Text("Günlük görevlerini not al ✍️")
+                                        .font(.subheadline)
+                                        .foregroundColor(.white.opacity(0.85))
+                                    Spacer()
+                                    Image(systemName: "checkmark.circle")
+                                        .foregroundColor(.white)
+                                        .font(.system(size: 28))
+                                }
+                                .padding()
+                                .frame(width: UIScreen.main.bounds.width * 0.45, height: 140)
+                                .background(
+                                    LinearGradient(colors: [.blue, .teal], startPoint: .topLeading, endPoint: .bottomTrailing)
+                                )
+                                .cornerRadius(20)
+                            }
+                            .sheet(isPresented: $showingTodoList) {
+                                TodoListView()
+                            }
+                        }
+
+                        // MARK: - Weekly Schedule
+                        VStack(spacing: 12) {
+                            HStack {
+                                Text("Haftalık Program")
+                                    .font(.title2.bold())
+                                    .foregroundColor(.white)
+
+                                Spacer()
+
+                                Button(action: {
+                                    showingTimetable = true
+                                }) {
+                                    Image(systemName: "plus")
+                                        .font(.title2)
+                                        .padding(10)
+                                        .background(Color.white.opacity(0.2))
+                                        .foregroundColor(.white)
+                                        .clipShape(Circle())
+                                }
+                            }
                             .padding()
                             .background(
                                 LinearGradient(
@@ -93,195 +268,14 @@ struct HomeView: View {
                                     endPoint: .trailing
                                 )
                             )
-                            .foregroundColor(.white)
-                            .cornerRadius(16)
-                    }
-
-                    // MARK: - En Yakın 3 Sınav
-                    if !exams.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            HStack {
-                                Text("Upcoming Exams")
-                                    .font(.headline)
-                                Spacer()
-                                Button("See All") {
-                                    showingAllExams = true
-                                }
-                                .font(.subheadline)
-                            }
-
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 12) {
-                                    ForEach(upcomingExams.prefix(3)) { exam in
-                                        VStack(alignment: .leading, spacing: 4) {
-                                            Text(exam.subject)
-                                                .font(.body.bold())
-                                            Text(exam.date, style: .date)
-                                                .font(.caption)
-                                                .foregroundColor(.gray)
-                                            if !exam.note.isEmpty {
-                                                Text(exam.note)
-                                                    .font(.callout)
-                                                    .foregroundColor(.secondary)
-                                            }
-                                        }
-                                        .padding()
-                                        .frame(width: 160)
-                                        .background(Color(.systemGray6))
-                                        .cornerRadius(12)
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    // MARK: - MoodCheck + AI Detector (Yan Yana)
-                    HStack(spacing: 12) {
-                        Button(action: {
-                            showingMoodCheck = true
-                        }) {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("MoodCheck")
-                                    .font(.title2.bold())
-                                    .foregroundColor(.white)
-                                Text("Nasıl hissediyorsun? AI önerilerini al 💡")
-                                    .font(.subheadline)
-                                    .foregroundColor(.white.opacity(0.85))
-                                Spacer()
-                                Image(systemName: "face.smiling.fill")
-                                    .foregroundColor(.white)
-                                    .font(.system(size: 28))
-                            }
-                            .padding()
-                            .frame(width: UIScreen.main.bounds.width * 0.45, height: 140)
-                            .background(
-                                LinearGradient(colors: [.orange, .yellow], startPoint: .topLeading, endPoint: .bottomTrailing)
-                            )
                             .cornerRadius(20)
-                        }
-                        .sheet(isPresented: $showingMoodCheck) {
-                            MoodCheckFullView()
-                        }
 
-                        Button(action: {
-                            showingAIDetector = true
-                        }) {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("AI Detector")
-                                    .font(.title2.bold())
-                                    .foregroundColor(.white)
-                                Text("Metni yapıştır, AI oranını öğren")
-                                    .font(.subheadline)
-                                    .foregroundColor(.white.opacity(0.85))
-                                Spacer()
-                                Image(systemName: "arrow.right.circle.fill")
-                                    .foregroundColor(.white)
-                                    .font(.system(size: 28))
-                            }
-                            .padding()
-                            .frame(width: UIScreen.main.bounds.width * 0.45, height: 140)
-                            .background(
-                                LinearGradient(colors: [.purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing)
-                            )
-                            .cornerRadius(20)
-                        }
-                        .sheet(isPresented: $showingAIDetector) {
-                            AIDetectorView()
+                            GridTimetableView(courses: $courses)
                         }
                     }
-                    // MARK: - Paraphrase + Görevlerim (Alt Satır)
-                    HStack(spacing: 12) {
-                        // Paraphrase Kutusu
-                        Button(action: {
-                            showingParaphrase = true
-                        }) {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("Paraphrase")
-                                    .font(.title2.bold())
-                                    .foregroundColor(.white)
-                                Text("AI çıkmasın, öğrenci gibi yaz")
-                                    .font(.subheadline)
-                                    .foregroundColor(.white.opacity(0.85))
-                                Spacer()
-                                Image(systemName: "text.append")
-                                    .foregroundColor(.white)
-                                    .font(.system(size: 28))
-                            }
-                            .padding()
-                            .frame(width: UIScreen.main.bounds.width * 0.45, height: 140)
-                            .background(
-                                LinearGradient(colors: [.purple, .indigo], startPoint: .topLeading, endPoint: .bottomTrailing)
-                            )
-                            .cornerRadius(20)
-                        }
-                        .sheet(isPresented: $showingParaphrase) {
-                            ParaphraseView()
-                        }
-
-                        // Görev Listesi Kutusu
-                        Button(action: {
-                            showingTodoList = true
-                        }) {
-                            VStack(alignment: .leading, spacing: 6) {
-                                Text("Görevlerim")
-                                    .font(.title2.bold())
-                                    .foregroundColor(.white)
-                                Text("Günlük görevlerini not al ✍️")
-                                    .font(.subheadline)
-                                    .foregroundColor(.white.opacity(0.85))
-                                Spacer()
-                                Image(systemName: "checkmark.circle")
-                                    .foregroundColor(.white)
-                                    .font(.system(size: 28))
-                            }
-                            .padding()
-                            .frame(width: UIScreen.main.bounds.width * 0.45, height: 140)
-                            .background(
-                                LinearGradient(colors: [.blue, .teal], startPoint: .topLeading, endPoint: .bottomTrailing)
-                            )
-                            .cornerRadius(20)
-                        }
-                        .sheet(isPresented: $showingTodoList) {
-                            TodoListView()
-                        }
-                    }
-
-                    // MARK: - Weekly Schedule
-                    VStack(spacing: 12) {
-                        HStack {
-                            Text("Haftalık Program")
-                                .font(.title2.bold())
-                                .foregroundColor(.white)
-
-                            Spacer()
-
-                            Button(action: {
-                                showingTimetable = true
-                            }) {
-                                Image(systemName: "plus")
-                                    .font(.title2)
-                                    .padding(10)
-                                    .background(Color.white.opacity(0.2))
-                                    .foregroundColor(.white)
-                                    .clipShape(Circle())
-                            }
-                        }
-                        .padding()
-                        .background(
-                            LinearGradient(
-                                gradient: Gradient(colors: [Color.cyan, Color.blue]),
-                                startPoint: .leading,
-                                endPoint: .trailing
-                            )
-                        )
-
-                        .cornerRadius(20)
-
-                        GridTimetableView(courses: $courses)
-                    }
-                }
-                .padding()
-            }
+                    .padding()
+                } // ScrollView sonu
+            } // VStack sonu
             .navigationBarHidden(true)
             .onAppear {
                 fetchUserProfile()
@@ -295,7 +289,6 @@ struct HomeView: View {
                     scheduleExamNotification(title: newExam.subject, examDate: newExam.date)
                 }
             }
-
             .sheet(isPresented: $showingTimetable) {
                 AddNewCourseView { newCourse in
                     courses.append(newCourse)
@@ -319,14 +312,12 @@ struct HomeView: View {
                                             .font(.callout)
                                             .foregroundColor(.secondary)
                                     }
-
                                     HStack {
                                         Button("Edit") {
                                             editingExam = exam
                                             showingEditExam = true
                                         }
                                         .padding(.trailing)
-
                                         Button(role: .destructive) {
                                             deleteExamFromFirestore(exam)
                                         } label: {
@@ -355,7 +346,7 @@ struct HomeView: View {
                     }
                 }
             }
-        }
+        } // NavigationView sonu
     }
 
     // Bildirim izinleri ve Firestore fonksiyonları (değişmedi)

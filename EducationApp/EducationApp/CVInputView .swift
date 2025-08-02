@@ -218,10 +218,10 @@ struct CVInputView: View {
             }
             .navigationBarHidden(true)
             .sheet(isPresented: $showPDFPreview) {
-                if let data = pdfData {
-                    PDFPreviewView(pdfData: data)
+                    if let data = pdfData {
+                    DownloadablePDFView(pdfData: data)
                 }
-            }
+               }
         }
     }
     
