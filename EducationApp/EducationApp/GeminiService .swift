@@ -5,7 +5,7 @@ class GeminiService {
     static let shared = GeminiService()
 
     // ✅ API anahtarı
-    private let apiKey = ""
+    private let apiKey = "***REMOVED***"
 
     // ✅ AI metin üretimi
     func generateText(from prompt: String, completion: @escaping (String?) -> Void) {

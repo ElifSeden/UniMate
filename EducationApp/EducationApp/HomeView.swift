@@ -28,6 +28,7 @@ struct HomeView: View {
     @State private var showingTimetable = false
     @State private var showingProfile = false
     @State private var showingMoodCheck = false
+    @State private var showingAIDetector = false
 
     @State private var courses: [Course] = sampleCourses
     @State private var weekOffset: Int = 0
@@ -39,45 +40,52 @@ struct HomeView: View {
                 VStack(alignment: .leading, spacing: 24) {
 
                     // MARK: - Header
-                    HStack {
-                        // Burayı HStack içine alıp iki ayrı Text olarak renklendiriyoruz
-                        HStack(spacing: 0) {
-                            Text("Welcome ")
-                                .font(.title)
-                                .bold()
-                                .foregroundColor(.orange.opacity(0.8))
-                            Text("User!")
-                                .font(.title)
-                                .bold()
-                                .foregroundColor(.purple.opacity(0.8))
+                    ZStack(alignment: .bottom) {
+                        Color.blue
+                            .ignoresSafeArea(edges: .top)
+                            .frame(height: 120)
+
+                        HStack {
+                            HStack(spacing: 0) {
+                                Text("Hoşgeldin ")
+                                    .font(.title)
+                                    .bold()
+                                    .foregroundColor(.white)
+
+                                Text("\(userProfile?.name ?? "User")!")
+                                    .font(.title)
+                                    .bold()
+                                    .foregroundColor(.white)
+                            }
+
+                            Spacer()
+
+                            NavigationLink(destination: MenuView(selectedTab: $selectedTab)) {
+                                Image(systemName: "person.crop.circle.fill")
+                                    .resizable()
+                                    .frame(width: 44, height: 44)
+                                    .foregroundColor(.white)
+                            }
                         }
-                        Spacer()
-                        NavigationLink(destination: MenuView(selectedTab: $selectedTab)) {
-                               Image(systemName: "person.crop.circle.fill")
-                                   .resizable()
-                                   .frame(width: 44, height: 44)
-                                   .foregroundColor(.gray)
-                           }
-                       }
-                       .padding()
-                       .background(Color(.systemGray6))
-                       .cornerRadius(16)
+                        .padding(.horizontal)
+                        .padding(.top, 50)
+                    }
+
 
                     // MARK: - Weekly Calendar View
                     MiniWeekTrackerView(selectedDate: $selectedDate, weekOffset: $weekOffset)
-                   
-                    // MARK: - Add Exam
 
+                    // MARK: - Add Exam
                     Button(action: {
                         showingAddExam = true
                     }) {
-                        Text("Add Exam")
+                        Text("Sınav Ekle")
                             .font(.headline)
                             .frame(maxWidth: .infinity)
                             .padding()
                             .background(
                                 LinearGradient(
-                                    gradient: Gradient(colors: [Color.purple, Color.orange]),
+                                    gradient: Gradient(colors: [Color.cyan, Color.blue]),
                                     startPoint: .leading,
                                     endPoint: .trailing
                                 )
@@ -85,6 +93,7 @@ struct HomeView: View {
                             .foregroundColor(.white)
                             .cornerRadius(16)
                     }
+
                     // MARK: - En Yakın 3 Sınav
                     if !exams.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
@@ -123,11 +132,11 @@ struct HomeView: View {
                         }
                     }
 
-                    // MARK: - MoodCheck Paneli
-                    Button(action: {
-                        showingMoodCheck = true
-                    }) {
-                        HStack {
+                    // MARK: - MoodCheck + AI Detector (Yan Yana)
+                    HStack(spacing: 12) {
+                        Button(action: {
+                            showingMoodCheck = true
+                        }) {
                             VStack(alignment: .leading, spacing: 6) {
                                 Text("MoodCheck")
                                     .font(.title2.bold())
@@ -135,77 +144,99 @@ struct HomeView: View {
                                 Text("Nasıl hissediyorsun? AI önerilerini al 💡")
                                     .font(.subheadline)
                                     .foregroundColor(.white.opacity(0.85))
+                                Spacer()
+                                Image(systemName: "face.smiling.fill")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 28))
                             }
-                            Spacer()
-                            Image(systemName: "face.smiling.fill")
-                                .foregroundColor(.white)
-                                .font(.system(size: 28))
+                            .padding()
+                            .frame(width: UIScreen.main.bounds.width * 0.45, height: 140)
+                            .background(
+                                LinearGradient(colors: [.orange, .yellow], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            )
+                            .cornerRadius(20)
                         }
-                        .padding()
-                        .background(
-                            LinearGradient(colors: [.purple, .blue], startPoint: .topLeading, endPoint: .bottomTrailing)
-                        )
-                        .cornerRadius(20)
-                        .padding(.horizontal, 4)
-                    }
-                    .sheet(isPresented: $showingMoodCheck) {
-                        MoodCheckFullView()
+                        .sheet(isPresented: $showingMoodCheck) {
+                            MoodCheckFullView()
+                        }
 
+                        Button(action: {
+                            showingAIDetector = true
+                        }) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("AI Detector")
+                                    .font(.title2.bold())
+                                    .foregroundColor(.white)
+                                Text("Metni yapıştır, AI oranını öğren")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.85))
+                                Spacer()
+                                Image(systemName: "arrow.right.circle.fill")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 28))
+                            }
+                            .padding()
+                            .frame(width: UIScreen.main.bounds.width * 0.45, height: 140)
+                            .background(
+                                LinearGradient(colors: [.purple, .pink], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            )
+                            .cornerRadius(20)
+                        }
+                        .sheet(isPresented: $showingAIDetector) {
+                            AIDetectorView()
+                        }
                     }
-
-                    AIDetectorView()
-                        .padding(.top, 8)
 
                     // MARK: - Weekly Schedule
                     VStack(spacing: 12) {
                         HStack {
-                            // Burada da aynı mantıkla iki renkli metin
-                            HStack(spacing: 0) {
-                                Text("Weekly ")
-                                    .font(.title2.bold())
-                                    .foregroundColor(.orange.opacity(0.8))
-                                Text("Schedule")
-                                    .font(.title2.bold())
-                                    .foregroundColor(.purple.opacity(0.8))
-                            }
+                            Text("Haftalık Program")
+                                .font(.title2.bold())
+                                .foregroundColor(.white)
+
                             Spacer()
+
                             Button(action: {
                                 showingTimetable = true
                             }) {
                                 Image(systemName: "plus")
                                     .font(.title2)
                                     .padding(10)
-                                    .background(Color.blue)
+                                    .background(Color.white.opacity(0.2))
                                     .foregroundColor(.white)
                                     .clipShape(Circle())
                             }
                         }
                         .padding()
-                        .background(Color(.systemGray6))
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.cyan, Color.blue]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+
                         .cornerRadius(20)
 
                         GridTimetableView(courses: $courses)
-                        
                     }
-                    
-                    
                 }
-               
                 .padding()
             }
             .navigationBarHidden(true)
             .onAppear {
                 fetchUserProfile()
                 fetchExams()
-                requestNotificationPermission() // ✅ Bildirim izni istenir
+                requestNotificationPermission()
             }
             .sheet(isPresented: $showingAddExam) {
-                AddExamView(date: selectedDate) { newExam in
+                AddExamView { newExam in
                     saveExamToFirestore(newExam)
                     exams.append(newExam)
-                    scheduleExamNotification(title: newExam.subject, examDate: newExam.date) // ✅ Bildirim kur
+                    scheduleExamNotification(title: newExam.subject, examDate: newExam.date)
                 }
             }
+
             .sheet(isPresented: $showingTimetable) {
                 AddNewCourseView { newCourse in
                     courses.append(newCourse)
@@ -268,7 +299,7 @@ struct HomeView: View {
         }
     }
 
-    // ✅ Bildirim izni isteyen fonksiyon
+    // Bildirim izinleri ve Firestore fonksiyonları (değişmedi)
     private func requestNotificationPermission() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if let error = error {
@@ -279,14 +310,13 @@ struct HomeView: View {
         }
     }
 
-    // ✅ Bildirimi 1 gün öncesine planlayan fonksiyon
     private func scheduleExamNotification(title: String, examDate: Date) {
         let content = UNMutableNotificationContent()
         content.title = "Sınav Hatırlatması 📚"
         content.body = "\(title) sınavın yarın! Hazır mısın?"
         content.sound = .default
 
-        let reminderDate = examDate.addingTimeInterval(-86400) // 1 gün önce (86400 saniye)
+        let reminderDate = examDate.addingTimeInterval(-86400)
         let triggerDate = Calendar.current.dateComponents([.year, .month, .day, .hour, .minute], from: reminderDate)
         let trigger = UNCalendarNotificationTrigger(dateMatching: triggerDate, repeats: false)
 
@@ -298,7 +328,6 @@ struct HomeView: View {
         }
     }
 
-    // 🔄 Firestore işlemleri — senin orijinal kodun değişmeden:
     private func fetchUserProfile() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()

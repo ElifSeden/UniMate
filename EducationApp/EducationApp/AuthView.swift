@@ -16,13 +16,19 @@ struct AuthView: View {
             VStack(alignment: .leading, spacing: 12) {
                 Text("E-posta")
                     .font(.subheadline)
-                TextField("ornek@unimate.com", text: $email)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                
+                TextField("E-posta adresiniz", text: $email)
                     .keyboardType(.emailAddress)
+                    .autocapitalization(.none)
+                    .disableAutocorrection(true)
+                    .textContentType(.none)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
 
                 Text("Şifre")
                     .font(.subheadline)
-                SecureField("••••••••", text: $password)
+                
+                SecureField("Şifreniz", text: $password)
+                    .textContentType(.none)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
             }
             .padding(.horizontal)

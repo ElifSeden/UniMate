@@ -103,17 +103,17 @@ struct CVInputView: View {
                         }
                         .padding(.horizontal)
                         
-                        // Form Alanları
+                        // Form Alanları (TÜRKÇE)
                         Group {
-                            labeledTextField(title: "Full Name", text: $name)
-                            labeledTextField(title: "Position / Title", text: $position)
-                            labeledTextField(title: "Email", text: $email, keyboard: .emailAddress)
-                            labeledTextField(title: "Phone", text: $phone)
-                            labeledTextField(title: "Location", text: $location)
-                            labeledTextField(title: "Website", text: $website)
+                            labeledTextField(title: "Ad Soyad", text: $name)
+                            labeledTextField(title: "Pozisyon / Unvan", text: $position)
+                            labeledTextField(title: "E-posta", text: $email, keyboard: .emailAddress)
+                            labeledTextField(title: "Telefon", text: $phone)
+                            labeledTextField(title: "Konum", text: $location)
+                            labeledTextField(title: "Web Sitesi", text: $website)
                             labeledTextField(title: "LinkedIn", text: $linkedin)
                             labeledTextField(title: "GitHub", text: $github)
-                            
+
                             Text("Kısa Tanıtım Yazısı").font(.headline)
                             TextEditor(text: $summary)
                                 .frame(height: 100)
@@ -121,6 +121,7 @@ struct CVInputView: View {
                                 .background(Color(.systemGray6))
                                 .cornerRadius(8)
                         }
+
                         .padding(.horizontal)
                         
                         // Eğitim Bilgileri
@@ -128,8 +129,8 @@ struct CVInputView: View {
                             Text("Eğitim Bilgileri").font(.headline)
                             ForEach(educations.indices, id: \.self) { i in
                                 VStack(alignment: .leading, spacing: 6) {
-                                    labeledTextField(title: "School", text: $educations[i].school)
-                                    labeledTextField(title: "Degree", text: $educations[i].degree)
+                                    labeledTextField(title: "Okul", text: $educations[i].school)
+                                    labeledTextField(title: "Bölüm / Derece", text: $educations[i].degree)
                                     DatePicker("Başlangıç", selection: $educations[i].startDate, displayedComponents: .date)
                                     DatePicker("Bitiş", selection: $educations[i].endDate, displayedComponents: .date)
                                 }
@@ -141,12 +142,13 @@ struct CVInputView: View {
                         
                         // İş Deneyimi
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Work Experience").font(.headline)
+                            Text("İş Deneyimi").font(.headline)
                             ForEach(experiences.indices, id: \.self) { i in
                                 VStack(alignment: .leading, spacing: 6) {
-                                    labeledTextField(title: "Position", text: $experiences[i].position)
-                                    labeledTextField(title: "Company", text: $experiences[i].company)
-                                    labeledTextField(title: "Description", text: $experiences[i].description)
+                                    labeledTextField(title: "Pozisyon", text: $experiences[i].position)
+                                    labeledTextField(title: "Şirket", text: $experiences[i].company)
+                                    labeledTextField(title: "Açıklama", text: $experiences[i].description)
+
                                     DatePicker("Başlangıç", selection: $experiences[i].startDate, displayedComponents: .date)
                                     DatePicker("Bitiş", selection: $experiences[i].endDate, displayedComponents: .date)
                                 }
@@ -158,9 +160,9 @@ struct CVInputView: View {
                         
                         // Yetenekler & Diller
                         VStack(alignment: .leading, spacing: 10) {
-                            Text("Skills (virgülle ayırın)").font(.headline)
+                            Text("Yetenekler (virgülle ayırın)").font(.headline)
                             labeledTextField(title: "Örnek: Swift, Firebase, Teamwork", text: $skillsText)
-                            Text("Languages (virgülle ayırın)").font(.headline)
+                            Text("Yabancı Diller (virgülle ayırın)").font(.headline)
                             labeledTextField(title: "Örnek: English - Native, Turkish - Fluent", text: $languagesText)
                         }
                         .padding(.horizontal)
@@ -202,7 +204,7 @@ struct CVInputView: View {
                             )
                             showPDFPreview = true
                         } label: {
-                            Text("Generate My CV")
+                            Text("CV'mi Oluştur")
                                 .frame(maxWidth: .infinity)
                                 .padding()
                                 .background(Color.blue)

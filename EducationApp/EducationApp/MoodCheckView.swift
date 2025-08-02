@@ -32,9 +32,25 @@ struct MoodCheckFullView: View {
         NavigationView {
             ScrollView {
                 VStack(spacing: 24) {
-                    Text("Nasıl hissediyorsun?")
-                        .font(.title)
-                        .bold()
+                    VStack(spacing: 8) {
+                        HStack {
+                            Text("MoodCheck")
+                                .font(.title)
+                                .bold()
+                                .foregroundColor(.white)
+                                .padding()
+                                .frame(maxWidth: .infinity)
+                        }
+                        .background(
+                            LinearGradient(colors: [.orange, .yellow], startPoint: .topLeading, endPoint: .bottomTrailing)
+                        )
+                        .cornerRadius(16)
+
+                        Text("Nasıl hissediyorsun?")
+                            .font(.title2)
+                            .bold()
+                    }
+
 
                     // Emoji seçim
                     HStack(spacing: 16) {
@@ -76,6 +92,7 @@ struct MoodCheckFullView: View {
                             HStack {
                                 Image(systemName: "wand.and.stars")
                                 Text("AI önerisi al")
+                                Spacer()
                             }
                             .padding()
                             .background(Color.blue)
@@ -101,69 +118,9 @@ struct MoodCheckFullView: View {
                         }
                     }
 
-                    // Görev kutuları
-                    VStack(alignment: .leading) {
-                        HStack {
-                            Text("Bugünlük Görevler ✅").font(.headline)
-                            Spacer()
-                            Button(action: { showAddTaskAlert = true }) {
-                                Image(systemName: "plus.circle.fill")
-                                    .font(.title3)
-                                    .foregroundColor(.blue)
-                            }
-                            .alert("Yeni Görev Ekle", isPresented: $showAddTaskAlert) {
-                                TextField("Yeni görev", text: $newTaskText)
-                                Button("Ekle", action: addNewTask)
-                                Button("İptal", role: .cancel) {}
-                            }
-                        }
+                
 
-                        if userTasks.isEmpty {
-                            Text("Henüz görev eklenmedi.")
-                                .foregroundColor(.gray)
-                                .padding(.top, 4)
-                        }
-
-                        ForEach(userTasks, id: \.self) { task in
-                            HStack {
-                                Button(action: {
-                                    toggleTask(task)
-                                }) {
-                                    Image(systemName: completedTasks.contains(task) ? "checkmark.circle.fill" : "circle")
-                                        .foregroundColor(completedTasks.contains(task) ? .green : .gray)
-                                        .font(.title2)
-                                }
-
-                                Text(task)
-                                    .strikethrough(completedTasks.contains(task))
-                                    .foregroundColor(completedTasks.contains(task) ? .gray : .primary)
-                            }
-                            .padding(.vertical, 4)
-                        }
-
-                        Text("Toplam Puan: \(points)")
-                            .font(.subheadline)
-                            .foregroundColor(.blue)
-                    }
-                    .padding()
-                    .background(Color(.systemGray6))
-                    .cornerRadius(12)
-
-                    // Rozetler
-                    if !earnedBadges.isEmpty {
-                        VStack(alignment: .leading, spacing: 8) {
-                            Text("Kazanılan Rozetler \u{1F3C5}")
-                                .font(.headline)
-                            ForEach(earnedBadges, id: \.self) { badge in
-                                Text("• \(badge)")
-                            }
-                        }
-                        .padding()
-                        .background(Color.orange.opacity(0.2))
-                        .cornerRadius(12)
-                    }
-
-                    // Motivasyon
+                // Motivasyon
                     if showMotivation {
                         VStack(alignment: .leading) {
                             Text("Motivasyon Mesajı \u{1F4DD}").font(.headline)
@@ -190,7 +147,7 @@ struct MoodCheckFullView: View {
                     fetchDailyMotivation()
                 }
             }
-            .navigationTitle("MoodCheck")
+            
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Kapat") {

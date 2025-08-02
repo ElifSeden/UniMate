@@ -1,12 +1,12 @@
 import SwiftUI
 
 struct GridTimetableView: View {
-    let days = ["Mon", "Tue", "Wed", "Thu", "Fri"]
+    let days = ["Pzt", "Sal", "Çar", "Per", "Cum"]
+
     let hours = Array(7...18)
     @Binding var courses: [Course]
 
     @State private var selectedCourse: Course? = nil
-    @State private var showingEditSheet = false
 
     var body: some View {
         VStack(spacing: 0) {
@@ -49,7 +49,6 @@ struct GridTimetableView: View {
                                             .foregroundColor(.white)
                                             .onTapGesture {
                                                 selectedCourse = course
-                                                showingEditSheet = true
                                             }
                                     }
 
@@ -68,23 +67,32 @@ struct GridTimetableView: View {
             }
         }
         .padding()
-        .sheet(isPresented: $showingEditSheet) {
-            if let selected = selectedCourse {
-                EditCourseView(course: selected) { updatedCourse in
-                    if let index = courses.firstIndex(where: { $0.id == updatedCourse.id }) {
-                        courses[index] = updatedCourse
-                    }
-                } onDelete: {
-                    courses.removeAll { $0.id == selected.id }
+        .sheet(item: $selectedCourse) { selected in
+            EditCourseView(course: selected) { updatedCourse in
+                if let index = courses.firstIndex(where: { $0.id == updatedCourse.id }) {
+                    courses[index] = updatedCourse
                 }
+            } onDelete: {
+                courses.removeAll { $0.id == selected.id }
             }
         }
     }
 
-    // ✅ Aynı hücreye düşen tüm dersleri bulur
+    // ✅ Aynı hücreye düşen tüm dersleri bulur (gün adı eşleştirme eklendi)
     func coursesAt(day: String, hour: Int) -> [Course] {
         return courses.filter {
-            $0.day.prefix(3).lowercased() == day.lowercased() && $0.hour == hour
+            $0.day == gunAdiTam(day) && $0.hour == hour
+        }
+    }
+
+    func gunAdiTam(_ kisa: String) -> String {
+        switch kisa {
+        case "Pzt": return "Pazartesi"
+        case "Sal": return "Salı"
+        case "Çar": return "Çarşamba"
+        case "Per": return "Perşembe"
+        case "Cum": return "Cuma"
+        default: return ""
         }
     }
 }

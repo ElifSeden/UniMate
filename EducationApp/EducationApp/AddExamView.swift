@@ -7,42 +7,78 @@ struct AddExamView: View {
 
     @State private var subject = ""
     @State private var note = ""
+    @State private var selectedDate = Date()
 
-    var date: Date
     var onSave: (Exam) -> Void
 
     var body: some View {
         NavigationView {
-            Form {
-                Section(header: Text("Exam Info")) {
-                    TextField("Subject", text: $subject)
-
-                    DatePicker("Date", selection: .constant(date), displayedComponents: .date)
-                        .disabled(true)
-
-                    TextField("Note (optional)", text: $note)
+            VStack(alignment: .leading, spacing: 20) {
+                
+                // Kapat Butonu
+                HStack {
+                    Button("Kapat") {
+                        presentationMode.wrappedValue.dismiss()
+                    }
+                    .foregroundColor(.blue)
+                    
+                    Spacer()
                 }
 
+                // Başlık
+                Text("Sınav Ekle")
+                    .font(.largeTitle.bold())
+
+                Text("Sınav Bilgileri")
+                    .font(.headline)
+                    .foregroundColor(.gray)
+
+                // Alanlar
+                VStack(spacing: 16) {
+                    TextField("Ders/Konu", text: $subject)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+
+                    DatePicker("Tarih", selection: $selectedDate, displayedComponents: .date)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+
+                    TextField("Not (isteğe bağlı)", text: $note)
+                        .padding()
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                }
+
+                // Kaydet Butonu (Gradientli)
                 Button(action: {
-                    let newExam = Exam(subject: subject, date: date, note: note)
+                    let newExam = Exam(subject: subject, date: selectedDate, note: note)
                     saveExamToFirestore(newExam)
                     onSave(newExam)
                     presentationMode.wrappedValue.dismiss()
                 }) {
-                    Text("Save Exam")
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.blue)
+                    Text("Sınavı Kaydet")
                         .foregroundColor(.white)
-                        .cornerRadius(10)
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(
+                            LinearGradient(
+                                gradient: Gradient(colors: [Color.orange, Color.yellow]),
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(16)
                 }
                 .disabled(subject.isEmpty)
+
+                Spacer()
             }
-            .navigationTitle("Add Exam")
+            .padding()
         }
     }
 
-    // 🔥 Firestore’a sınav kaydetme fonksiyonu
     func saveExamToFirestore(_ exam: Exam) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
         let db = Firestore.firestore()

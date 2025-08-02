@@ -1,12 +1,14 @@
 import SwiftUI
+import FirebaseAuth
 
 struct MenuView: View {
     @Binding var selectedTab: Int
     @Environment(\.presentationMode) private var presentationMode
+    @EnvironmentObject var authViewModel: AuthViewModel  // ✅ Eklendi
 
     var body: some View {
         List {
-            // 1. Profilim
+            // ✅ 1. Profilim
             NavigationLink {
                 ProfileView(selectedTab: $selectedTab)
             } label: {
@@ -24,62 +26,7 @@ struct MenuView: View {
                 .padding(.vertical, 6)
             }
 
-            // 2. Arkadaşlık İstekleri
-            NavigationLink {
-                FriendsView()
-                    .navigationTitle("Arkadaşlık İstekleri")
-            } label: {
-                HStack(spacing: 16) {
-                    Image(systemName: "person.crop.circle.badge.plus")
-                        .font(.system(size: 22))
-                        .foregroundColor(.blue)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Arkadaşlık İstekleri")
-                        Text("Yeni gelen istekleri gör")
-                            .font(.footnote)
-                            .foregroundColor(.gray)
-                    }
-                }
-                .padding(.vertical, 6)
-            }
-
-            // 3. Bildirimler
-            NavigationLink {
-                NotificationsView()
-            } label: {
-                HStack(spacing: 16) {
-                    Image(systemName: "bell")
-                        .font(.system(size: 22))
-                        .foregroundColor(.blue)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Bildirimler")
-                        Text("Tüm uyarılarını yönet")
-                            .font(.footnote)
-                            .foregroundColor(.gray)
-                    }
-                }
-                .padding(.vertical, 6)
-            }
-
-            // 4. Zaman Yönetimi (GERÇEK EKRAN)
-            NavigationLink {
-                ZamanYonetimiView()
-            } label: {
-                HStack(spacing: 16) {
-                    Image(systemName: "clock")
-                        .font(.system(size: 22))
-                        .foregroundColor(.blue)
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Zaman Yönetimi")
-                        Text("Uygulama kullanım süreni gör")
-                            .font(.footnote)
-                            .foregroundColor(.gray)
-                    }
-                }
-                .padding(.vertical, 6)
-            }
-
-            // 5. Ayarlar
+            // ✅ 2. Ayarlar
             NavigationLink {
                 SettingsView()
                 Text("Ayarlar Ekranı")
@@ -98,20 +45,22 @@ struct MenuView: View {
                 }
                 .padding(.vertical, 6)
             }
-        }
-        .listStyle(InsetGroupedListStyle())
-        .navigationTitle("Ayarlar ve Hareketler")
-        .navigationBarTitleDisplayMode(.inline)
-        .navigationBarBackButtonHidden(true)
-        .toolbar {
-            ToolbarItem(placement: .navigationBarLeading) {
-                Button {
-                    presentationMode.wrappedValue.dismiss()
+
+            // ✅ 3. Çıkış Yap
+            Section {
+                Button(role: .destructive) {
+                    authViewModel.signOut()                  // ✅ Firebase çıkışı
+                    selectedTab = 0                          // ✅ Ana sayfaya dön
+                    presentationMode.wrappedValue.dismiss() // ✅ Menüden çık
                 } label: {
-                    HStack(spacing: 4) {
-                        Image(systemName: "chevron.backward")
-                        Text("Geri")
+                    HStack {
+                        Image(systemName: "arrow.backward.circle.fill")
+                            .foregroundColor(.red)
+                        Text("Çıkış Yap")
+                            .foregroundColor(.red)
+                            .textCase(nil)
                     }
+                    .padding(.vertical, 6)
                 }
             }
         }

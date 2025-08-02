@@ -1,4 +1,4 @@
-import SwiftUI
+/*import SwiftUI
 
 struct AddCourseView: View {
     @Environment(\.dismiss) var dismiss
@@ -60,3 +60,4 @@ struct AddCourseView: View {
 }
 
 
+*/

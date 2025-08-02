@@ -17,8 +17,7 @@ struct ProfileView: View {
 
     @Environment(\.dismiss) private var dismiss
 
-    // Avrupa ülkeleri + Türkiye + Diğer
-    private let countries = [
+    private let countries: [String] = [
         "Almanya","Andorra","Arnavutluk","Avusturya","Belçika","Beyaz Rusya",
         "Bosna-Hersek","Bulgaristan","Çekya","Danimarka","Estonya","Finlandiya",
         "Fransa","Hırvatistan","İrlanda","İngiltere","İspanya","İsveç","İsviçre",
@@ -28,7 +27,6 @@ struct ProfileView: View {
         "Slovakya","Slovenya","Ukrayna","Vatikan","Türkiye","Diğer"
     ]
 
-    // Tüm gerekli alanlar dolu mu?
     private var isFormValid: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty &&
         !surname.trimmingCharacters(in: .whitespaces).isEmpty &&
@@ -92,12 +90,14 @@ struct ProfileView: View {
                 },
                 message: { Text("Profil bilgileriniz güncellendi.") }
             )
+            .onAppear {
+                loadProfile() // ✅ Kayıtlı bilgileri geri yükle
+            }
         }
     }
 
     private func saveProfile() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
-        let db = Firestore.firestore()
 
         let data: [String: Any] = [
             "name": name,
@@ -110,11 +110,29 @@ struct ProfileView: View {
             "email": Auth.auth().currentUser?.email ?? ""
         ]
 
-        db.collection("users").document(uid).setData(data) { error in
+        Firestore.firestore().collection("users").document(uid).setData(data) { error in
             if let error = error {
                 print("❌ Kaydetme hatası: \(error.localizedDescription)")
             } else {
                 showSavedAlert = true
+            }
+        }
+    }
+
+    private func loadProfile() {
+        guard let uid = Auth.auth().currentUser?.uid else { return }
+
+        Firestore.firestore().collection("users").document(uid).getDocument { snapshot, error in
+            if let data = snapshot?.data() {
+                self.name = data["name"] as? String ?? ""
+                self.surname = data["surname"] as? String ?? ""
+                self.phone = data["phone"] as? String ?? ""
+                self.universityName = data["universityName"] as? String ?? ""
+                self.department = data["department"] as? String ?? ""
+                self.selectedCountry = data["country"] as? String ?? ""
+                if let timestamp = data["birthday"] as? Timestamp {
+                    self.birthday = timestamp.dateValue()
+                }
             }
         }
     }

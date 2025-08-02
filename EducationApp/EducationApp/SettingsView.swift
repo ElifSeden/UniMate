@@ -22,15 +22,7 @@ struct SettingsView: View {
                 Toggle("Koyu Mod", isOn: $darkModeEnabled)
             }
             
-            Section(header: Text("Dil")) {
-                Picker("Uygulama Dili", selection: $selectedLanguage) {
-                    ForEach(languages.keys.sorted(), id: \.self) { code in
-                        Text(languages[code]!)
-                            .tag(code)
-                    }
-                }
-                .pickerStyle(.segmented)
-            }
+            
         }
         .navigationTitle("Ayarlar")
         .onChange(of: selectedLanguage) { newLang in

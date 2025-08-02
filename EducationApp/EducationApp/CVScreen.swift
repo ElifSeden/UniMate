@@ -9,8 +9,12 @@ struct CVScreen: View {
     @State private var isLoading = false
     @State private var selectedURL: URL?
 
+    @State private var showShareSheet = false
+    @State private var pdfURL: URL?
+
     var body: some View {
-        NavigationView {
+        NavigationStack {
+
             VStack(spacing: 20) {
                 Button("Upload CV (PDF)") {
                     showPicker = true
@@ -35,12 +39,34 @@ struct CVScreen: View {
             }
             .padding()
             .navigationTitle("CV Mentor")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button(action: {
+                        if let url = selectedURL,
+                           let data = try? Data(contentsOf: url),
+                           let savedURL = savePDFLocally(data: data) {
+                            self.pdfURL = savedURL
+                            self.showShareSheet = true
+                        }
+                    }) {
+                        Image(systemName: "square.and.arrow.down")
+                            .imageScale(.large)
+                            .foregroundColor(.blue)
+                    }
+                    .disabled(selectedURL == nil)
+                }
+            }
             .sheet(isPresented: $showPicker) {
                 DocumentPicker { url in
                     if let url = url {
                         selectedURL = url
                         extractText(from: url)
                     }
+                }
+            }
+            .sheet(isPresented: $showShareSheet) {
+                if let url = pdfURL {
+                    ShareSheet(activityItems: [url])
                 }
             }
         }
@@ -56,6 +82,17 @@ struct CVScreen: View {
             }
         }
         self.cvText = fullText
-        // istersen burada AI yorum fonksiyonu çağrısı yapabilirsin
+        // Burada AI ile analiz yapılabilir
+    }
+
+    func savePDFLocally(data: Data) -> URL? {
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("UploadedCV.pdf")
+        do {
+            try data.write(to: tempURL)
+            return tempURL
+        } catch {
+            print("PDF kaydedilemedi: \(error)")
+            return nil
+        }
     }
 }

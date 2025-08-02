@@ -2,115 +2,120 @@ import SwiftUI
 import UniformTypeIdentifiers
 
 struct AIDetectorView: View {
-    @State private var showAIDetector = false
+    @Environment(\.dismiss) var dismiss
     @State private var inputText = ""
     @State private var detectedResult: [String: Double]? = nil
     @State private var showFileImporter = false
     @State private var isLoading = false
 
     var body: some View {
-        VStack(spacing: 0) {
-            // Üst Başlık Kutusu
-            HStack {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("AI Detector")
+        ScrollView {
+            VStack(spacing: 20) {
+
+                // 🔙 Kapat + Başlık Kutusu (MoodCheck tarzı)
+                HStack {
+                    Button("Kapat") {
+                        dismiss()
+                    }
+                    .foregroundColor(.blue)
+                    .padding(.leading)
+
+                    Spacer()
+                }
+
+                VStack(alignment: .center, spacing: 6) {
+                    Text("AI Tespiti")
                         .font(.title2.bold())
                         .foregroundColor(.white)
-                    Text("Metni yapıştır, AI oranını öğren")
+                    Text("Metni yapıştırın veya yükleyin, AI oranını öğrenin.")
                         .font(.subheadline)
                         .foregroundColor(.white.opacity(0.9))
                 }
-                Spacer()
-                Button(action: {
-                    withAnimation {
-                        showAIDetector.toggle()
-                    }
-                }) {
-                    Image(systemName: showAIDetector ? "chevron.down.circle.fill" : "chevron.right.circle.fill")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                }
-            }
-            .padding()
-            .background(
-                LinearGradient(colors: [.orange, .purple], startPoint: .topLeading, endPoint: .bottomTrailing)
-            )
-            .cornerRadius(20)
-            .padding(.horizontal, 4)
+                .frame(maxWidth: .infinity)
+                .padding()
+                .background(Color.orange)
+                .cornerRadius(20)
+                .padding(.horizontal)
 
-            if showAIDetector {
-                VStack(spacing: 16) {
-                    Text("To analyze text, add at least 40 words.")
-                        .font(.caption)
-                        .foregroundColor(.gray)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                // 📝 Metin Girişi Kutusu
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Metni Yapıştırın")
+                        .font(.headline)
 
                     TextEditor(text: $inputText)
-                        .frame(height: 140)
-                        .padding(6)
+                        .frame(height: 130)
+                        .padding(8)
                         .background(Color(.systemGray6))
                         .cornerRadius(12)
 
-                    HStack {
-                        Button(action: {
-                            showFileImporter = true
-                        }) {
-                            Label("Upload doc", systemImage: "doc.fill")
-                        }
-                        .buttonStyle(.bordered)
-
-                        Spacer()
-
-                        Button(action: {
-                            detectAI()
-                        }) {
-                            Text("Detect AI")
-                                .font(.headline)
-                                .padding(.horizontal, 20)
-                        }
-                        .buttonStyle(.borderedProminent)
-                        .disabled(inputText.split(separator: " ").count < 40)
-                    }
-
-                    if isLoading {
-                        ProgressView("AI analiz ediliyor...")
-                            .padding()
-                    }
-
-                    if let result = detectedResult {
-                        VStack(spacing: 8) {
-                            ForEach(result.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
-                                HStack {
-                                    Text(key)
-                                    Spacer()
-                                    Text(String(format: "%.1f%%", value * 100))
-                                }
-                                .font(.subheadline)
-                            }
-                        }
-                        .padding()
-                        .background(Color(.systemGray6))
-                        .cornerRadius(12)
-                    }
+                    Text("Minimum 40 kelime giriniz.")
+                        .font(.caption)
+                        .foregroundColor(.gray)
                 }
                 .padding()
                 .background(Color.white)
                 .cornerRadius(20)
-                .shadow(radius: 4)
+                .shadow(color: .gray.opacity(0.2), radius: 3)
                 .padding(.horizontal)
-                .padding(.top, 8)
+
+                // 📎 Butonlar
+                HStack {
+                    Button(action: {
+                        showFileImporter = true
+                    }) {
+                        Label("Dosya Yükle", systemImage: "doc.fill")
+                    }
+                    .buttonStyle(.bordered)
+
+                    Spacer()
+
+                    Button(action: detectAI) {
+                        Text("AI Tespiti Yap")
+                    }
+                    .buttonStyle(.borderedProminent)
+                    .disabled(inputText.split(separator: " ").count < 40)
+                }
+                .padding(.horizontal)
+
+                // ⏳ Yükleniyor
+                if isLoading {
+                    ProgressView("AI analiz ediliyor...")
+                        .padding()
+                }
+
+                // ✅ Sonuçlar
+                if let result = detectedResult {
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Sonuçlar")
+                            .font(.headline)
+
+                        ForEach(result.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(key)
+                                    .font(.subheadline)
+                                ProgressView(value: value) {
+                                    Text(String(format: "%.1f%%", value * 100))
+                                }
+                                .accentColor(.purple)
+                            }
+                        }
+
+                        Text("⚠️ Bu oranlar tahmine dayalıdır.")
+                            .font(.footnote)
+                            .foregroundColor(.gray)
+                    }
+                    .padding()
+                    .background(Color.white)
+                    .cornerRadius(20)
+                    .shadow(color: .gray.opacity(0.2), radius: 3)
+                    .padding(.horizontal)
+                }
             }
+            .padding(.vertical)
         }
-        .padding(.top)
         .fileImporter(
             isPresented: $showFileImporter,
-            allowedContentTypes: [
-                UTType.plainText,
-                UTType.text,
-                UTType.rtf,
-                UTType.pdf,
-                UTType.item
-            ],
+            allowedContentTypes: [.plainText, .text, .rtf, .pdf, .item],
             allowsMultipleSelection: false
         ) { result in
             switch result {
@@ -126,11 +131,10 @@ struct AIDetectorView: View {
     }
 
     func detectAI() {
-        isLoading = true  // Yükleme başlat
-
+        isLoading = true
         let prompt = """
         Aşağıdaki metni değerlendir ve sadece bu 4 etiketin oranlarını sırayla ver, her biri ayrı satırda olacak:
-        AI-generated: %... 
+        AI-generated: %...
         AI-generated & AI-refined: %...
         Human-written & AI-refined: %...
         Human-written: %...
@@ -140,12 +144,9 @@ struct AIDetectorView: View {
         """
 
         GeminiService.shared.generateText(from: prompt) { response in
-            isLoading = false  // Yükleme bitti
+            isLoading = false
 
-            guard let response = response else {
-                print("Yanıt alınamadı.")
-                return
-            }
+            guard let response = response else { return }
 
             let lines = response.components(separatedBy: "\n")
             var result: [String: Double] = [
@@ -170,4 +171,4 @@ struct AIDetectorView: View {
             self.detectedResult = result
         }
     }
-    }
+}

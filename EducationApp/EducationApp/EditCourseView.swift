@@ -1,6 +1,4 @@
 import SwiftUI
-// Course modelini kullanabilmek için CourseModel dosyasını projenin bir parçası yaptığından emin ol
-// Eğer hata alırsan: 'Cannot find Course in scope' => CourseModel.swift dosyasının Target Membership'ını kontrol et!
 
 struct EditCourseView: View {
     @Environment(\.presentationMode) var presentationMode
@@ -27,15 +25,15 @@ struct EditCourseView: View {
     var body: some View {
         NavigationView {
             Form {
-                Section(header: Text("Edit Course")) {
-                    TextField("Course Name", text: $name)
-                    TextField("Day (e.g., Monday)", text: $day)
-                    TextField("Location", text: $location)
-                    Stepper("Hour: \(hour)", value: $hour, in: 7...18)
+                Section(header: Text("Ders Bilgisi")) {
+                    TextField("Ders Adı", text: $name)
+                    TextField("Gün (ör: Pazartesi)", text: $day)
+                    TextField("Yer", text: $location)
+                    Stepper("Saat: \(hour):00", value: $hour, in: 7...18)
                 }
 
                 Section {
-                    Button("Save Changes") {
+                    Button("Değişiklikleri Kaydet") {
                         let updated = Course(
                             id: course.id,
                             name: name,
@@ -50,14 +48,14 @@ struct EditCourseView: View {
                     }
                     .foregroundColor(.blue)
 
-                    Button("Delete Course") {
+                    Button("Dersi Sil") {
                         onDelete()
                         presentationMode.wrappedValue.dismiss()
                     }
                     .foregroundColor(.red)
                 }
             }
-            .navigationTitle("Edit Course")
+            .navigationTitle("Dersi Düzenle")
         }
     }
 }
