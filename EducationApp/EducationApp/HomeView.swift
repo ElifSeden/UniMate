@@ -29,6 +29,9 @@ struct HomeView: View {
     @State private var showingProfile = false
     @State private var showingMoodCheck = false
     @State private var showingAIDetector = false
+    @State private var showingParaphrase = false
+    @State private var showingTodoList = false
+
 
     @State private var courses: [Course] = sampleCourses
     @State private var weekOffset: Int = 0
@@ -184,6 +187,62 @@ struct HomeView: View {
                         }
                         .sheet(isPresented: $showingAIDetector) {
                             AIDetectorView()
+                        }
+                    }
+                    // MARK: - Paraphrase + Görevlerim (Alt Satır)
+                    HStack(spacing: 12) {
+                        // Paraphrase Kutusu
+                        Button(action: {
+                            showingParaphrase = true
+                        }) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Paraphrase")
+                                    .font(.title2.bold())
+                                    .foregroundColor(.white)
+                                Text("AI çıkmasın, öğrenci gibi yaz")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.85))
+                                Spacer()
+                                Image(systemName: "text.append")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 28))
+                            }
+                            .padding()
+                            .frame(width: UIScreen.main.bounds.width * 0.45, height: 140)
+                            .background(
+                                LinearGradient(colors: [.purple, .indigo], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            )
+                            .cornerRadius(20)
+                        }
+                        .sheet(isPresented: $showingParaphrase) {
+                            ParaphraseView()
+                        }
+
+                        // Görev Listesi Kutusu
+                        Button(action: {
+                            showingTodoList = true
+                        }) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("Görevlerim")
+                                    .font(.title2.bold())
+                                    .foregroundColor(.white)
+                                Text("Günlük görevlerini not al ✍️")
+                                    .font(.subheadline)
+                                    .foregroundColor(.white.opacity(0.85))
+                                Spacer()
+                                Image(systemName: "checkmark.circle")
+                                    .foregroundColor(.white)
+                                    .font(.system(size: 28))
+                            }
+                            .padding()
+                            .frame(width: UIScreen.main.bounds.width * 0.45, height: 140)
+                            .background(
+                                LinearGradient(colors: [.blue, .teal], startPoint: .topLeading, endPoint: .bottomTrailing)
+                            )
+                            .cornerRadius(20)
+                        }
+                        .sheet(isPresented: $showingTodoList) {
+                            TodoListView()
                         }
                     }
 

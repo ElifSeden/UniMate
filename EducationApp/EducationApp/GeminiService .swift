@@ -5,7 +5,7 @@ class GeminiService {
     static let shared = GeminiService()
 
     // ✅ API anahtarı
-    private let apiKey = ""
+    private let apiKey = "***REMOVED***"
 
     // ✅ AI metin üretimi
     func generateText(from prompt: String, completion: @escaping (String?) -> Void) {
@@ -76,4 +76,16 @@ class GeminiService {
             }
         }.resume()
     }
+    func sendPrompt(_ prompt: String) async throws -> String {
+        return try await withCheckedThrowingContinuation { continuation in
+            generateText(from: prompt) { result in
+                if let result = result {
+                    continuation.resume(returning: result)
+                } else {
+                    continuation.resume(throwing: NSError(domain: "GeminiError", code: 0, userInfo: [NSLocalizedDescriptionKey: "Yanıt alınamadı."]))
+                }
+            }
+        }
+    }
+
 }
