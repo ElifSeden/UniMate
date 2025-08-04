@@ -20,6 +20,12 @@ struct HomeView: View {
     @State private var showingAllExams = false
     @State private var editingExam: Exam? = nil
     @State private var showingEditExam = false
+    @State private var greetingText: String = ""
+    private var fullGreeting: String {
+        // userProfile dolduysa göster, değilse boş bırak
+        guard let name = userProfile?.name, !name.isEmpty else { return "" }
+        return "Hoşgeldin \(name)!"
+    }
 
     var upcomingExams: [Exam] {
         exams.sorted { $0.date < $1.date }
@@ -44,25 +50,28 @@ struct HomeView: View {
 
                 // MARK: - HEADER
                 ZStack {
-                    // ← DÜZENLENDİ: SafeArea üstünü mavi kapla
                     Color.blue
-                        .ignoresSafeArea(edges: .top)
+                            .ignoresSafeArea(edges: .top)
 
-                    // ← DÜZENLENDİ: Yazı ve ikon ortada yatay düzlemde
-                    HStack(spacing: 12) {
-                        Text("Hoşgeldin \(userProfile?.name ?? "User")!")
-                            .font(.title).bold()
-                            .foregroundColor(.white)
-                        NavigationLink(destination: MenuView(selectedTab: $selectedTab)) {
-                            Image(systemName: "person.crop.circle.fill")
-                                .resizable()
-                                .frame(width: 32, height: 32)
+                        HStack(spacing: 12) {
+                            Text(greetingText)
+                                .font(.title).bold()
                                 .foregroundColor(.white)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+
+                            NavigationLink(destination: MenuView(selectedTab: $selectedTab)) {
+                                Image(systemName: "person.crop.circle.fill")
+                                    .resizable()
+                                    .frame(width: 41, height: 41)
+                                    .foregroundColor(.white)
+                            }
                         }
+                        .padding(.horizontal, 10)
+                        .padding(.top, UIApplication.shared.windows.first?.safeAreaInsets.top ?? 0)
+                        .padding(.bottom, 20)
                     }
-                    .frame(maxWidth: .infinity)
-                }
-                .frame(height: 120)  // header yüksekliği
+                    .frame(height: 56)
+                    .offset(y: -20)
 
                 // MARK: - Scrollable İçerik
                 ScrollView {
@@ -385,12 +394,19 @@ struct HomeView: View {
         db.collection("users").document(uid).getDocument { document, error in
             if let document = document, document.exists {
                 let data = document.data()
+                let name = data?["name"] as? String ?? ""
+                let surname = data?["surname"] as? String ?? ""
+                // vs. ihtiyacın kadar alan
                 self.userProfile = UserProfile(
-                    name: data?["name"] as? String ?? "",
-                    surname: data?["surname"] as? String ?? "",
+                    name: name,
+                    surname: surname,
                     department: data?["department"] as? String ?? "",
                     universityName: data?["universityName"] as? String ?? ""
                 )
+                // İşte tam da burada, gerçek isim geldiğinde yazdır:
+                DispatchQueue.main.async {
+                    self.typeWriter()
+                }
             } else {
                 print("Kullanıcı profili bulunamadı: \(error?.localizedDescription ?? "Bilinmeyen hata")")
             }
@@ -449,6 +465,16 @@ struct HomeView: View {
             }
         }
     }
+    private func typeWriter() {
+        greetingText = ""
+        let chars = Array(fullGreeting)
+        for i in chars.indices {
+            DispatchQueue.main.asyncAfter(deadline: .now() + Double(i) * 0.08) {
+                greetingText.append(chars[i])
+            }
+        }
+    }
+
 
     private func updateExamInFirestore(_ exam: Exam) {
         guard let uid = Auth.auth().currentUser?.uid else { return }
@@ -463,4 +489,5 @@ struct HomeView: View {
             }
         }
     }
+    
 }

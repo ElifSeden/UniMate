@@ -11,7 +11,7 @@ struct MainTabView: View {
                 }
                 .tag(0)
 
-            PDFSummaryView()
+            PDFSummaryView(selectedTab: $selectedTab)
                 .tabItem {
                     Label("PDF", systemImage: "doc.text.magnifyingglass")
                 }

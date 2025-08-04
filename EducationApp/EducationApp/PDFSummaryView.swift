@@ -1,40 +1,87 @@
 import SwiftUI
 import PDFKit
 import UniformTypeIdentifiers
+import AVFoundation
 
 struct PDFSummaryView: View {
+
     @State private var selectedDocumentURL: URL?
     @State private var showPicker = false
     @State private var showError = false
     @State private var errorMessage = ""
     @State private var summary: String?
     @State private var isLoading = false
+    @State private var isSpeaking = false
     @State private var showQuizSetup = false
     @State private var selectedQuizType = "Çoktan Seçmeli"
     @State private var selectedQuizCount = 5
 
+    @Environment(\.presentationMode) private var presentationMode
+    @Binding var selectedTab: Int
 
     let geminiService = GeminiService()
+    private let synthesizer = AVSpeechSynthesizer()
 
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Başlık
-                HStack(spacing: 8) {
-                    Image(systemName: "doc.text")
-                        .font(.title2)
-                        .foregroundColor(.white)
-                    Text("PDF Özet")
-                        .font(.title2).bold()
-                        .foregroundColor(.white)
+                // HEADER with centered title and left-aligned buttons
+                ZStack {
+                    Color.blue.ignoresSafeArea(edges: .top)
+
+                    // Centered title
+                    HStack(spacing: 8) {
+                        Image(systemName: "doc.text")
+                            .font(.title2)
+                            .foregroundColor(.white)
+                        Text("PDF Özet")
+                            .font(.title2).bold()
+                            .foregroundColor(.white)
+                    }
+
+                    // Left-aligned buttons: Back & Play/Stop (hidden until summary)
+                    HStack(spacing: 16) {
+                        if summary != nil {
+                            Button {
+                                // Back action
+                                selectedDocumentURL = nil
+                                summary = nil
+                                isLoading = false
+                                showError = false
+                                synthesizer.stopSpeaking(at: .immediate)
+                                isSpeaking = false
+                                presentationMode.wrappedValue.dismiss()
+                            } label: {
+                                Image(systemName: "chevron.left")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                            }
+                            Button {
+                                // Play/Stop action
+                                if isSpeaking {
+                                    synthesizer.stopSpeaking(at: .immediate)
+                                    isSpeaking = false
+                                } else {
+                                    let utterance = AVSpeechUtterance(string: summary!)
+                                    utterance.voice = AVSpeechSynthesisVoice(language: "tr-TR")
+                                    synthesizer.speak(utterance)
+                                    isSpeaking = true
+                                }
+                            } label: {
+                                Image(systemName: isSpeaking ? "stop.fill" : "play.fill")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                            }
+                        }
+                        Spacer()
+                    }
+                    .padding(.leading)
                 }
-                .padding()
-                .frame(maxWidth: .infinity)
-                .background(Color.blue)
+                .frame(height: 56)
 
                 Divider()
 
-                // İçerik
+                // CONTENT
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         if let url = selectedDocumentURL {
@@ -81,7 +128,7 @@ struct PDFSummaryView: View {
 
                 Divider()
 
-                // Butonlar
+                // FOOTER: Özet Çıkar + + Buttons
                 HStack(spacing: 16) {
                     Button("Özet Çıkar") {
                         guard let url = selectedDocumentURL else { return }
@@ -92,10 +139,10 @@ struct PDFSummaryView: View {
                             self.isLoading = false
                         }
                     }
-                    .disabled(selectedDocumentURL == nil || isLoading)
+                    .disabled(selectedDocumentURL == nil || isLoading || summary != nil)
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background((selectedDocumentURL != nil && !isLoading) ? Color.blue : Color.gray)
+                    .background((selectedDocumentURL != nil && !isLoading && summary == nil) ? Color.blue : Color.gray.opacity(0.6))
                     .foregroundColor(.white)
                     .cornerRadius(8)
 
@@ -122,11 +169,16 @@ struct PDFSummaryView: View {
                     }
                 }
             }
-            .alert("Hata", isPresented: $showError, actions: {
+            .alert("Hata", isPresented: $showError) {
                 Button("Tamam", role: .cancel) { }
-            }, message: {
+            } message: {
                 Text(errorMessage)
-            })
+            }
+        }
+        .onDisappear {
+            if isSpeaking {
+                synthesizer.stopSpeaking(at: .immediate)
+            }
         }
     }
 

@@ -2,6 +2,12 @@ import SwiftUI
 import PhotosUI
 import PDFKit
 
+// Wrapper for sheet(item:)
+struct PDFWrapper: Identifiable {
+    let id = UUID()
+    let data: Data
+}
+
 struct CVInputView: View {
     // MARK: – State
     // Kişisel Bilgiler
@@ -16,32 +22,29 @@ struct CVInputView: View {
     @State private var summary = ""
     @State private var skillsText = ""
     @State private var languagesText = ""
-    
+
     // Eğitim ve Deneyim
     @State private var educations: [EducationInfo] = [EducationInfo()]
     @State private var experiences: [ExperienceInfo] = [ExperienceInfo()]
-    
+
     // Tema Seçimi
     @State private var selectedTheme: String = "Green"
     let themeOptions = ["Green", "Navy", "Maroon", "Black", "DarkYellow"]
-    
+
     // Profil Fotoğrafı
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var profileImage: UIImage?
-    
-    // PDF Oluşturma & Önizleme
-    @State private var pdfData: Data?
-    @State private var showPDFPreview = false
-    
+
+    // PDF Oluşturma Wrapper
+    @State private var pdfWrapper: PDFWrapper?
+
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                
-                // MARK: –– Üstte SafeArea’yı da kaplayan tam mavi başlık
+                // Başlık
                 ZStack(alignment: .bottom) {
                     Color.blue
                         .ignoresSafeArea(edges: .top)
-                    
                     HStack {
                         Spacer()
                         Text("CV Mentor")
@@ -52,11 +55,9 @@ struct CVInputView: View {
                     .padding(.bottom, 12)
                 }
                 .frame(height: 80)
-                
-                // MARK: –– İçerik
+
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        
                         // Tema Seçimi
                         VStack(alignment: .leading, spacing: 10) {
                             Text("CV Tema Rengi").font(.headline)
@@ -77,7 +78,7 @@ struct CVInputView: View {
                         .background(Color(.systemGray6))
                         .cornerRadius(12)
                         .padding(.horizontal)
-                        
+
                         // Profil Fotoğrafı
                         HStack {
                             if let img = profileImage {
@@ -102,8 +103,8 @@ struct CVInputView: View {
                                 }
                         }
                         .padding(.horizontal)
-                        
-                        // Form Alanları (TÜRKÇE)
+
+                        // Form Alanları
                         Group {
                             labeledTextField(title: "Ad Soyad", text: $name)
                             labeledTextField(title: "Pozisyon / Unvan", text: $position)
@@ -121,13 +122,12 @@ struct CVInputView: View {
                                 .background(Color(.systemGray6))
                                 .cornerRadius(8)
                         }
-
                         .padding(.horizontal)
-                        
+
                         // Eğitim Bilgileri
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Eğitim Bilgileri").font(.headline)
-                            ForEach(educations.indices, id: \.self) { i in
+                            ForEach(educations.indices, id: \..self) { i in
                                 VStack(alignment: .leading, spacing: 6) {
                                     labeledTextField(title: "Okul", text: $educations[i].school)
                                     labeledTextField(title: "Bölüm / Derece", text: $educations[i].degree)
@@ -139,16 +139,15 @@ struct CVInputView: View {
                             Button("+ Eğitim Ekle") { educations.append(EducationInfo()) }
                         }
                         .padding(.horizontal)
-                        
+
                         // İş Deneyimi
                         VStack(alignment: .leading, spacing: 10) {
                             Text("İş Deneyimi").font(.headline)
-                            ForEach(experiences.indices, id: \.self) { i in
+                            ForEach(experiences.indices, id: \..self) { i in
                                 VStack(alignment: .leading, spacing: 6) {
                                     labeledTextField(title: "Pozisyon", text: $experiences[i].position)
                                     labeledTextField(title: "Şirket", text: $experiences[i].company)
                                     labeledTextField(title: "Açıklama", text: $experiences[i].description)
-
                                     DatePicker("Başlangıç", selection: $experiences[i].startDate, displayedComponents: .date)
                                     DatePicker("Bitiş", selection: $experiences[i].endDate, displayedComponents: .date)
                                 }
@@ -157,7 +156,7 @@ struct CVInputView: View {
                             Button("+ Deneyim Ekle") { experiences.append(ExperienceInfo()) }
                         }
                         .padding(.horizontal)
-                        
+
                         // Yetenekler & Diller
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Yetenekler (virgülle ayırın)").font(.headline)
@@ -166,7 +165,7 @@ struct CVInputView: View {
                             labeledTextField(title: "Örnek: English - Native, Turkish - Fluent", text: $languagesText)
                         }
                         .padding(.horizontal)
-                        
+
                         // CV Oluştur Butonu
                         Button {
                             let skills = skillsText
@@ -177,32 +176,36 @@ struct CVInputView: View {
                                 .map { $0.trimmingCharacters(in: .whitespaces) }
                             let theme: PDFCreator.Theme = {
                                 switch selectedTheme {
-                                    case "Navy": return .navy
-                                    case "Maroon": return .maroon
-                                    case "Black": return .black
-                                    case "DarkYellow": return .darkYellow
-                                    default: return .green
+                                case "Navy": return .navy
+                                case "Maroon": return .maroon
+                                case "Black": return .black
+                                case "DarkYellow": return .darkYellow
+                                default: return .green
                                 }
                             }()
-                            
-                            pdfData = PDFCreator.createStyledPDF(
-                                name: name,
-                                position: position,
-                                email: email,
-                                phone: phone,
-                                location: location,
-                                linkedin: linkedin,
-                                github: github,
-                                website: website,
-                                skills: skills,
-                                experiences: experiences,
-                                educations: educations,
-                                profileImage: profileImage,
-                                summary: summary,
-                                languages: langs,
-                                theme: theme
-                            )
-                            showPDFPreview = true
+
+                            DispatchQueue.global(qos: .userInitiated).async {
+                                let data = PDFCreator.createStyledPDF(
+                                    name: name,
+                                    position: position,
+                                    email: email,
+                                    phone: phone,
+                                    location: location,
+                                    linkedin: linkedin,
+                                    github: github,
+                                    website: website,
+                                    skills: skills,
+                                    experiences: experiences,
+                                    educations: educations,
+                                    profileImage: profileImage,
+                                    summary: summary,
+                                    languages: langs,
+                                    theme: theme
+                                )
+                                DispatchQueue.main.async {
+                                    self.pdfWrapper = PDFWrapper(data: data)
+                                }
+                            }
                         } label: {
                             Text("CV'mi Oluştur")
                                 .frame(maxWidth: .infinity)
@@ -216,17 +219,14 @@ struct CVInputView: View {
                     }
                 }
             }
-            .navigationBarHidden(true)
-            .sheet(isPresented: $showPDFPreview) {
-                    if let data = pdfData {
-                    DownloadablePDFView(pdfData: data)
-                }
-               }
+            .sheet(item: $pdfWrapper) { wrapper in
+                DownloadablePDFView(pdfData: wrapper.data)
+            }
         }
     }
-    
+
     // MARK: – Yardımcı Görünümler
-    
+
     private func labeledTextField(title: String, text: Binding<String>, keyboard: UIKeyboardType = .default) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(title).font(.subheadline).foregroundColor(.gray)
@@ -239,7 +239,7 @@ struct CVInputView: View {
                 .cornerRadius(8)
         }
     }
-    
+
     private func themeCircle(color: UIColor, selected: Bool) -> some View {
         Circle()
             .strokeBorder(selected ? Color.black : Color.clear, lineWidth: 3)
