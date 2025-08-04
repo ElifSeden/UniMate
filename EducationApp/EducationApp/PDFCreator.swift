@@ -92,35 +92,58 @@ struct PDFCreator {
             summary.draw(in: CGRect(x: margin, y: yOffset, width: pageWidth - 2 * margin, height: summaryHeight), withAttributes: summaryAttributes)
             yOffset += summaryHeight + 10
 
-
-            // İlk çizgi (Work Experience öncesi)
+            // Work Experience başlığı ve çizgi
             drawDivider(context: context, y: yOffset, theme: theme)
             yOffset += 20
-
-            // Work Experience
-            "Work Experience".draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 16)])
+            "Work Experience".draw(
+                at: CGPoint(x: margin, y: yOffset),
+                withAttributes: [.font: UIFont.boldSystemFont(ofSize: 16)]
+            )
             yOffset += 28
 
-            for exp in experiences {
+            // Deneyimleri sırasıyla yaz
+            for (index, exp) in experiences.enumerated() {
+                // 1) Tarih satırı (gri renkte)
                 let dateText = "\(formatDate(exp.startDate)) - \(formatDate(exp.endDate))"
-                dateText.draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 12), .foregroundColor: UIColor.gray])
-
-                let contentX = margin + 160
-                exp.position.draw(at: CGPoint(x: contentX, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 14)])
-                yOffset += 20
-
-                exp.company.draw(at: CGPoint(x: contentX, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 13)])
+                dateText.draw(
+                    at: CGPoint(x: margin, y: yOffset),
+                    withAttributes: [
+                        .font: UIFont.systemFont(ofSize: 12),
+                        .foregroundColor: UIColor.gray
+                    ]
+                )
                 yOffset += 18
 
+                // 2) Numara + Pozisyon (kalın)
+                let numberedPosition = "\(index + 1). \(exp.position)"
+                numberedPosition.draw(
+                    at: CGPoint(x: margin, y: yOffset),
+                    withAttributes: [.font: UIFont.boldSystemFont(ofSize: 14)]
+                )
+                yOffset += 20
+
+                // 3) Şirket adı
+                exp.company.draw(
+                    at: CGPoint(x: margin, y: yOffset),
+                    withAttributes: [.font: UIFont.systemFont(ofSize: 13)]
+                )
+                yOffset += 18
+
+                // 4) Açıklama satırları – madde işaretiyle
                 let lines = exp.description.components(separatedBy: "\n")
-                for (index, line) in lines.enumerated() {
-                    let numbered = "\(index + 1). \(line)"
-                    numbered.draw(in: CGRect(x: contentX, y: yOffset, width: pageWidth - contentX - margin, height: 18), withAttributes: [.font: UIFont.systemFont(ofSize: 12)])
+                for line in lines {
+                    let bulletLine = "• \(line)"
+                    bulletLine.draw(
+                        at: CGPoint(x: margin + 8, y: yOffset),
+                        withAttributes: [.font: UIFont.systemFont(ofSize: 12)]
+                    )
                     yOffset += 16
                 }
-                yOffset += 16
-            }
 
+                // Deneyimler arası boşluk
+                yOffset += 12
+            }
+            // Divider
             drawDivider(context: context, y: yOffset, theme: theme)
             yOffset += 20
 
