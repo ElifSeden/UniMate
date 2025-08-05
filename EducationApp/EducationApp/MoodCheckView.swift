@@ -6,7 +6,6 @@ import UserNotifications
 struct MoodCheckFullView: View {
     @Environment(\.dismiss) var dismiss
 
-    // Ruh hali & AI
     @State private var selectedMood: String? = nil
     @State private var saveStatus: String? = nil
     @State private var moodComment: String = ""
@@ -15,7 +14,6 @@ struct MoodCheckFullView: View {
     @State private var showMotivation = false
     @State private var motivationMessage = ""
 
-    // Görevler & Puan
     @State private var userTasks: [String] = []
     @State private var newTaskText: String = ""
     @State private var showAddTaskAlert = false
@@ -23,7 +21,6 @@ struct MoodCheckFullView: View {
     @State private var completedTasks: Set<String> = []
     @State private var points: Int = 0
 
-    // Rozetler
     @State private var earnedBadges: [String] = []
 
     let moods = ["😄", "🙂", "😐", "😔", "😢"]
@@ -52,7 +49,6 @@ struct MoodCheckFullView: View {
                     }
 
 
-                    // Emoji seçim
                     HStack(spacing: 16) {
                         ForEach(moods, id: \.self) { mood in
                             ZStack {
@@ -69,7 +65,6 @@ struct MoodCheckFullView: View {
                         }
                     }
 
-                    // AI Önerisi
                     if let mood = selectedMood {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("AI Önerisi \u{1F4A1}").font(.headline)
@@ -82,7 +77,6 @@ struct MoodCheckFullView: View {
                         .cornerRadius(12)
                     }
 
-                    // Yorum & AI öneri
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Bugünkü modunu kelimelere dökmek ister misin?").font(.headline)
                         TextField("Bugün çok stresliyim...", text: $moodComment)
@@ -120,7 +114,6 @@ struct MoodCheckFullView: View {
 
                 
 
-                // Motivasyon
                     if showMotivation {
                         VStack(alignment: .leading) {
                             Text("Motivasyon Mesajı \u{1F4DD}").font(.headline)
@@ -131,7 +124,6 @@ struct MoodCheckFullView: View {
                         .cornerRadius(12)
                     }
 
-                    // Kayıt durumu
                     if let status = saveStatus {
                         Text(status)
                             .font(.footnote)
@@ -158,7 +150,6 @@ struct MoodCheckFullView: View {
         }
     }
 
-    // MARK: - Fonksiyonlar
 
     func getSuggestion(for mood: String) -> String {
         switch mood {

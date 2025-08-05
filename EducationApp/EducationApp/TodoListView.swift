@@ -11,7 +11,6 @@ struct TodoListView: View {
         NavigationView {
             VStack(spacing: 20) {
 
-                // 🔶 Renkli başlık kutusu (orta hizalı)
                 VStack(alignment: .center, spacing: 4) {
                     Text("Görevlerim")
                         .font(.title.bold())
@@ -29,7 +28,6 @@ struct TodoListView: View {
                 .cornerRadius(20)
                 .padding(.horizontal)
 
-                // Görev ekleme kutusu
                 HStack {
                     TextField("Yeni görev ekle...", text: $newTask)
                         .padding()
@@ -45,7 +43,6 @@ struct TodoListView: View {
                 }
                 .padding(.horizontal)
 
-                // Görev listesi
                 if tasks.isEmpty {
                     Spacer()
                     VStack(spacing: 8) {

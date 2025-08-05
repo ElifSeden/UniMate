@@ -1,9 +1,8 @@
 import SwiftUI
 import FirebaseFirestore
 import FirebaseAuth
-import UserNotifications // ✅ Bildirim için eklendi
+import UserNotifications
 
-// Kullanıcı profili modeli
 struct UserProfile {
     let name: String
     let surname: String
@@ -22,7 +21,6 @@ struct HomeView: View {
     @State private var showingEditExam = false
     @State private var greetingText: String = ""
     private var fullGreeting: String {
-        // userProfile dolduysa göster, değilse boş bırak
         guard let name = userProfile?.name, !name.isEmpty else { return "" }
         return "Hoşgeldin \(name)!"
     }
@@ -45,42 +43,37 @@ struct HomeView: View {
 
     var body: some View {
         NavigationView {
-            // ← DÜZENLENDİ: VStack ile header’ı ScrollView dışına aldık
             VStack(spacing: 0) {
-
-                // MARK: - HEADER
+                
                 ZStack {
                     Color.blue
-                            .ignoresSafeArea(edges: .top)
-
-                        HStack(spacing: 12) {
-                            Text(greetingText)
-                                .font(.title).bold()
+                        .ignoresSafeArea(edges: .top)
+                    
+                    HStack(spacing: 12) {
+                        Text(greetingText)
+                            .font(.title).bold()
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                        
+                        NavigationLink(destination: MenuView(selectedTab: $selectedTab)) {
+                            Image(systemName: "person.crop.circle.fill")
+                                .resizable()
+                                .frame(width: 41, height: 41)
                                 .foregroundColor(.white)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-
-                            NavigationLink(destination: MenuView(selectedTab: $selectedTab)) {
-                                Image(systemName: "person.crop.circle.fill")
-                                    .resizable()
-                                    .frame(width: 41, height: 41)
-                                    .foregroundColor(.white)
-                            }
                         }
-                        .padding(.horizontal, 10)
-                        .padding(.top, UIApplication.shared.windows.first?.safeAreaInsets.top ?? 0)
-                        .padding(.bottom, 20)
                     }
-                    .frame(height: 56)
-                    .offset(y: -20)
-
-                // MARK: - Scrollable İçerik
+                    .padding(.horizontal, 10)
+                    .padding(.top, UIApplication.shared.windows.first?.safeAreaInsets.top ?? 0)
+                    .padding(.bottom, 20)
+                }
+                .frame(height: 56)
+                .offset(y: -20)
+                
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
-
-                        // MARK: - Weekly Calendar View
+                        
                         MiniWeekTrackerView(selectedDate: $selectedDate, weekOffset: $weekOffset)
-
-                        // MARK: - Add Exam
+                        
                         Button(action: {
                             showingAddExam = true
                         }) {
@@ -98,8 +91,7 @@ struct HomeView: View {
                                 .foregroundColor(.white)
                                 .cornerRadius(16)
                         }
-
-                        // MARK: - En Yakın 3 Sınav
+                        
                         if !exams.isEmpty {
                             VStack(alignment: .leading, spacing: 8) {
                                 HStack {
@@ -111,7 +103,7 @@ struct HomeView: View {
                                     }
                                     .font(.subheadline)
                                 }
-
+                                
                                 ScrollView(.horizontal, showsIndicators: false) {
                                     HStack(spacing: 12) {
                                         ForEach(upcomingExams.prefix(3)) { exam in
@@ -136,8 +128,6 @@ struct HomeView: View {
                                 }
                             }
                         }
-
-                        // MARK: - MoodCheck + AI Detector (Yan Yana)
                         HStack(spacing: 12) {
                             Button(action: {
                                 showingMoodCheck = true
@@ -164,7 +154,7 @@ struct HomeView: View {
                             .sheet(isPresented: $showingMoodCheck) {
                                 MoodCheckFullView()
                             }
-
+                            
                             Button(action: {
                                 showingAIDetector = true
                             }) {
@@ -191,10 +181,9 @@ struct HomeView: View {
                                 AIDetectorView()
                             }
                         }
-
-                        // MARK: - Paraphrase + Görevlerim (Alt Satır)
+                        
                         HStack(spacing: 12) {
-                            // Paraphrase Kutusu
+                            
                             Button(action: {
                                 showingParaphrase = true
                             }) {
@@ -220,8 +209,6 @@ struct HomeView: View {
                             .sheet(isPresented: $showingParaphrase) {
                                 ParaphraseView()
                             }
-
-                            // Görev Listesi Kutusu
                             Button(action: {
                                 showingTodoList = true
                             }) {
@@ -248,16 +235,15 @@ struct HomeView: View {
                                 TodoListView()
                             }
                         }
-
-                        // MARK: - Weekly Schedule
+                        
                         VStack(spacing: 12) {
                             HStack {
                                 Text("Haftalık Program")
                                     .font(.title2.bold())
                                     .foregroundColor(.white)
-
+                                
                                 Spacer()
-
+                                
                                 Button(action: {
                                     showingTimetable = true
                                 }) {
@@ -278,13 +264,13 @@ struct HomeView: View {
                                 )
                             )
                             .cornerRadius(20)
-
+                            
                             GridTimetableView(courses: $courses)
                         }
                     }
                     .padding()
-                } // ScrollView sonu
-            } // VStack sonu
+                }
+            }
             .navigationBarHidden(true)
             .onAppear {
                 fetchUserProfile()
@@ -307,15 +293,14 @@ struct HomeView: View {
                 ProfileView(selectedTab: $selectedTab)
             }
             .sheet(isPresented: $showingAllExams) {
+              
                 NavigationView {
                     ScrollView {
                         VStack(spacing: 12) {
                             ForEach(upcomingExams) { exam in
                                 VStack(alignment: .leading, spacing: 6) {
-                                    Text(exam.subject)
-                                        .font(.headline)
-                                    Text(exam.date, style: .date)
-                                        .foregroundColor(.gray)
+                                    Text(exam.subject).font(.headline)
+                                    Text(exam.date, style: .date).foregroundColor(.gray)
                                     if !exam.note.isEmpty {
                                         Text(exam.note)
                                             .font(.callout)
@@ -323,10 +308,11 @@ struct HomeView: View {
                                     }
                                     HStack {
                                         Button("Edit") {
+                                            
                                             editingExam = exam
-                                            showingEditExam = true
                                         }
                                         .padding(.trailing)
+                                        
                                         Button(role: .destructive) {
                                             deleteExamFromFirestore(exam)
                                         } label: {
@@ -345,20 +331,24 @@ struct HomeView: View {
                     }
                     .navigationTitle("All Exams")
                     .navigationBarTitleDisplayMode(.inline)
-                }
-            }
-            .sheet(item: $editingExam) { exam in
-                EditExamView(exam: exam) { updatedExam in
-                    updateExamInFirestore(updatedExam)
-                    if let index = exams.firstIndex(where: { $0.id == updatedExam.id }) {
-                        exams[index] = updatedExam
+                   
+                    .sheet(item: $editingExam) { exam in
+                        EditExamView(exam: exam) { updated in
+                         
+                            updateExamInFirestore(updated)
+                           
+                            if let idx = exams.firstIndex(where: { $0.id == updated.id }) {
+                                exams[idx] = updated
+                            }
+                            
+                            editingExam = nil
+                        }
                     }
                 }
             }
-        } // NavigationView sonu
+        }
     }
-
-    // Bildirim izinleri ve Firestore fonksiyonları (değişmedi)
+    
     private func requestNotificationPermission() {
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge]) { granted, error in
             if let error = error {
@@ -396,14 +386,14 @@ struct HomeView: View {
                 let data = document.data()
                 let name = data?["name"] as? String ?? ""
                 let surname = data?["surname"] as? String ?? ""
-                // vs. ihtiyacın kadar alan
+              
                 self.userProfile = UserProfile(
                     name: name,
                     surname: surname,
                     department: data?["department"] as? String ?? "",
                     universityName: data?["universityName"] as? String ?? ""
                 )
-                // İşte tam da burada, gerçek isim geldiğinde yazdır:
+              
                 DispatchQueue.main.async {
                     self.typeWriter()
                 }

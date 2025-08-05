@@ -48,7 +48,6 @@ struct PDFCreator {
             context.beginPage()
             var yOffset: CGFloat = margin
 
-            // Profil Fotoğrafı
             if let image = profileImage {
                 let imgRect = CGRect(x: margin, y: yOffset, width: 80, height: 80)
                 context.cgContext.saveGState()
@@ -59,13 +58,11 @@ struct PDFCreator {
 
             let infoX = margin + 100
 
-            // İsim ve Pozisyon
             name.uppercased().draw(at: CGPoint(x: infoX, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 20)])
             yOffset += 26
             position.uppercased().draw(at: CGPoint(x: infoX, y: yOffset), withAttributes: [.font: UIFont.systemFont(ofSize: 14)])
             yOffset += 26
 
-            // İletişim Bilgileri
             let infoFont = UIFont.systemFont(ofSize: 11)
             let infos = [
                 "✉️  \(email)",
@@ -82,7 +79,6 @@ struct PDFCreator {
 
             yOffset += 10
 
-            // Hakkımda (Summary)
             let summaryFont = UIFont.systemFont(ofSize: 12)
             let summaryAttributes: [NSAttributedString.Key: Any] = [.font: summaryFont]
             let summaryRect = CGRect(x: margin, y: yOffset, width: pageWidth - 2 * margin, height: .greatestFiniteMagnitude)
@@ -92,7 +88,6 @@ struct PDFCreator {
             summary.draw(in: CGRect(x: margin, y: yOffset, width: pageWidth - 2 * margin, height: summaryHeight), withAttributes: summaryAttributes)
             yOffset += summaryHeight + 10
 
-            // Work Experience başlığı ve çizgi
             drawDivider(context: context, y: yOffset, theme: theme)
             yOffset += 20
             "Work Experience".draw(
@@ -100,10 +95,7 @@ struct PDFCreator {
                 withAttributes: [.font: UIFont.boldSystemFont(ofSize: 16)]
             )
             yOffset += 28
-
-            // Deneyimleri sırasıyla yaz
             for (index, exp) in experiences.enumerated() {
-                // 1) Tarih satırı (gri renkte)
                 let dateText = "\(formatDate(exp.startDate)) - \(formatDate(exp.endDate))"
                 dateText.draw(
                     at: CGPoint(x: margin, y: yOffset),
@@ -114,7 +106,6 @@ struct PDFCreator {
                 )
                 yOffset += 18
 
-                // 2) Numara + Pozisyon (kalın)
                 let numberedPosition = "\(index + 1). \(exp.position)"
                 numberedPosition.draw(
                     at: CGPoint(x: margin, y: yOffset),
@@ -122,14 +113,12 @@ struct PDFCreator {
                 )
                 yOffset += 20
 
-                // 3) Şirket adı
                 exp.company.draw(
                     at: CGPoint(x: margin, y: yOffset),
                     withAttributes: [.font: UIFont.systemFont(ofSize: 13)]
                 )
                 yOffset += 18
 
-                // 4) Açıklama satırları – madde işaretiyle
                 let lines = exp.description.components(separatedBy: "\n")
                 for line in lines {
                     let bulletLine = "• \(line)"
@@ -140,14 +129,11 @@ struct PDFCreator {
                     yOffset += 16
                 }
 
-                // Deneyimler arası boşluk
                 yOffset += 12
             }
-            // Divider
             drawDivider(context: context, y: yOffset, theme: theme)
             yOffset += 20
 
-            // Education
             "Education".draw(at: CGPoint(x: margin, y: yOffset), withAttributes: [.font: UIFont.boldSystemFont(ofSize: 16)])
             yOffset += 28
 
@@ -164,7 +150,6 @@ struct PDFCreator {
             drawDivider(context: context, y: yOffset, theme: theme)
             yOffset += 20
 
-            // Skills & Languages
             let columnWidth = (pageWidth - 2 * margin - 20) / 2
             let leftX = margin
             let rightX = margin + columnWidth + 20

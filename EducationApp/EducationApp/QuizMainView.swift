@@ -15,7 +15,6 @@ struct QuizMainView: View {
     var body: some View {
         NavigationView {
             VStack {
-                // Başlık barı
                 HStack {
                     Image(systemName: "checklist")
                         .foregroundColor(.white)
@@ -45,6 +44,7 @@ struct QuizMainView: View {
                             ProgressView("Hazırlanıyor...")
                                 .padding()
                         } else {
+                            // Devam Et
                             Button("Devam Et") {
                                 showSetup = true
                             }
@@ -54,9 +54,23 @@ struct QuizMainView: View {
                             .foregroundColor(.white)
                             .cornerRadius(8)
                             .padding(.horizontal, 40)
+
+                      
+                            Button("Sıfırla") {
+                                selectedDocumentURL = nil
+                                generatedQuestions = []
+                                navigateToQuiz = false
+                            }
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color.red)
+                            .foregroundColor(.white)
+                            .cornerRadius(8)
+                            .padding(.horizontal, 40)
                         }
 
                     } else {
+                    
                         Text("PDF'e göre AI destekli quiz oluşturmak için dosya yükleyin.")
                             .multilineTextAlignment(.center)
                             .foregroundColor(.gray)

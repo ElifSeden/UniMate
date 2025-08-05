@@ -10,7 +10,7 @@ struct GridTimetableView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Gün başlıkları
+           
             HStack(spacing: 0) {
                 Text("").frame(width: 40)
                 ForEach(days, id: \.self) { day in
@@ -23,7 +23,7 @@ struct GridTimetableView: View {
                 }
             }
 
-            // Saat satırları
+           
             ForEach(hours, id: \.self) { hour in
                 HStack(spacing: 0) {
                     Text("\(hour)")
@@ -78,7 +78,6 @@ struct GridTimetableView: View {
         }
     }
 
-    // ✅ Aynı hücreye düşen tüm dersleri bulur (gün adı eşleştirme eklendi)
     func coursesAt(day: String, hour: Int) -> [Course] {
         return courses.filter {
             $0.day == gunAdiTam(day) && $0.hour == hour

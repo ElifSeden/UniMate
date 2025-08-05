@@ -14,9 +14,8 @@ struct MiniWeekTrackerView: View {
 
     var body: some View {
         VStack(spacing: 8) {
-            // Gün isimleri satırı
             HStack(spacing: 12) {
-                Text("") // boşluk < için hizalama
+                Text("")
                     .frame(width: 24)
                 ForEach(weekDates, id: \.self) { date in
                     let weekday = calendar.shortWeekdaySymbols[calendar.component(.weekday, from: date) - 1]
@@ -25,13 +24,13 @@ struct MiniWeekTrackerView: View {
                         .foregroundColor(.gray)
                         .frame(maxWidth: .infinity)
                 }
-                Text("") // boşluk > için hizalama
+                Text("")
                     .frame(width: 24)
             }
 
-            // Gün numaraları ve butonlar satırı
+            
             HStack(spacing: 12) {
-                // < Butonu
+             
                 Button(action: {
                     weekOffset -= 1
                 }) {
@@ -40,7 +39,7 @@ struct MiniWeekTrackerView: View {
                         .frame(width: 24, height: 32)
                 }
 
-                // Günler
+             
                 ForEach(weekDates, id: \.self) { date in
                     let isToday = calendar.isDateInToday(date)
                     let isSelected = calendar.isDate(date, inSameDayAs: selectedDate)
@@ -65,7 +64,7 @@ struct MiniWeekTrackerView: View {
 
 
 
-                // > Butonu
+               
                 Button(action: {
                     weekOffset += 1
                 }) {

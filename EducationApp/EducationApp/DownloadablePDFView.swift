@@ -11,7 +11,7 @@ struct DownloadablePDFView: View {
             HStack {
                 Spacer()
                 if let url = pdfURL {
-                    // iOS 16+ için ShareLink
+                    
                     ShareLink(item: url) {
                         Image(systemName: "square.and.arrow.down")
                             .font(.title2)
@@ -22,7 +22,7 @@ struct DownloadablePDFView: View {
             .padding(.horizontal)
             .background(Color(.systemGray6))
             
-            // PDF gösteren eski UIViewRepresentable
+            
             PDFKitRepresentedView(data: pdfData)
                 .edgesIgnoringSafeArea(.all)
         }

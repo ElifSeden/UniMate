@@ -2,15 +2,13 @@ import SwiftUI
 import PhotosUI
 import PDFKit
 
-// Wrapper for sheet(item:)
 struct PDFWrapper: Identifiable {
     let id = UUID()
     let data: Data
 }
 
 struct CVInputView: View {
-    // MARK: – State
-    // Kişisel Bilgiler
+    
     @State private var name = ""
     @State private var position = ""
     @State private var email = ""
@@ -23,25 +21,25 @@ struct CVInputView: View {
     @State private var skillsText = ""
     @State private var languagesText = ""
 
-    // Eğitim ve Deneyim
+    
     @State private var educations: [EducationInfo] = [EducationInfo()]
     @State private var experiences: [ExperienceInfo] = [ExperienceInfo()]
 
-    // Tema Seçimi
+   
     @State private var selectedTheme: String = "Green"
     let themeOptions = ["Green", "Navy", "Maroon", "Black", "DarkYellow"]
 
-    // Profil Fotoğrafı
+   
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var profileImage: UIImage?
 
-    // PDF Oluşturma Wrapper
+
     @State private var pdfWrapper: PDFWrapper?
 
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Başlık
+               
                 ZStack(alignment: .bottom) {
                     Color.blue
                         .ignoresSafeArea(edges: .top)
@@ -58,7 +56,7 @@ struct CVInputView: View {
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
-                        // Tema Seçimi
+                        
                         VStack(alignment: .leading, spacing: 10) {
                             Text("CV Tema Rengi").font(.headline)
                             HStack(spacing: 16) {
@@ -79,7 +77,7 @@ struct CVInputView: View {
                         .cornerRadius(12)
                         .padding(.horizontal)
 
-                        // Profil Fotoğrafı
+                       
                         HStack {
                             if let img = profileImage {
                                 Image(uiImage: img)
@@ -104,7 +102,7 @@ struct CVInputView: View {
                         }
                         .padding(.horizontal)
 
-                        // Form Alanları
+                    
                         Group {
                             labeledTextField(title: "Ad Soyad", text: $name)
                             labeledTextField(title: "Pozisyon / Unvan", text: $position)
@@ -124,7 +122,6 @@ struct CVInputView: View {
                         }
                         .padding(.horizontal)
 
-                        // Eğitim Bilgileri
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Eğitim Bilgileri").font(.headline)
                             ForEach(educations.indices, id: \..self) { i in
@@ -140,7 +137,7 @@ struct CVInputView: View {
                         }
                         .padding(.horizontal)
 
-                        // İş Deneyimi
+               
                         VStack(alignment: .leading, spacing: 10) {
                             Text("İş Deneyimi").font(.headline)
                             ForEach(experiences.indices, id: \..self) { i in
@@ -157,7 +154,7 @@ struct CVInputView: View {
                         }
                         .padding(.horizontal)
 
-                        // Yetenekler & Diller
+                        
                         VStack(alignment: .leading, spacing: 10) {
                             Text("Yetenekler (virgülle ayırın)").font(.headline)
                             labeledTextField(title: "Örnek: Swift, Firebase, Teamwork", text: $skillsText)
@@ -166,7 +163,7 @@ struct CVInputView: View {
                         }
                         .padding(.horizontal)
 
-                        // CV Oluştur Butonu
+                       
                         Button {
                             let skills = skillsText
                                 .split(separator: ",")
@@ -225,7 +222,6 @@ struct CVInputView: View {
         }
     }
 
-    // MARK: – Yardımcı Görünümler
 
     private func labeledTextField(title: String, text: Binding<String>, keyboard: UIKeyboardType = .default) -> some View {
         VStack(alignment: .leading, spacing: 6) {

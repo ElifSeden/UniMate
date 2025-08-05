@@ -1,6 +1,6 @@
 import SwiftUI
 import FirebaseFirestore
-import FirebaseAuth   // <-- Eksik olan bu!
+import FirebaseAuth   
 
 struct EditExamView: View {
     @Environment(\.presentationMode) var presentationMode

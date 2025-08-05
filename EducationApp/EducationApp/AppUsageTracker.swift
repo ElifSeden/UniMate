@@ -20,17 +20,15 @@ class AppUsageTracker: ObservableObject {
     private var hasSentNotification = false
     
     init() {
-        // Daha önce kaydettiysek yükle, yoksa 0 (yani bildirim kapalı)
         dailyLimitSeconds = UserDefaults.standard.double(forKey: "dailyLimitSeconds")
         
-        // Bildirim yetkisini iste
         UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound]) { granted, error in
             if let err = error {
                 print("Bildirim yetkisi alınırken hata: \(err)")
             }
         }
         
-        // … burada totalSecondsToday’ı yükleme veya gerçek zamanlı güncelleme mantığını da ekleyebilirsin.
+        
     }
     
     private func saveLimit() {
@@ -52,7 +50,6 @@ class AppUsageTracker: ObservableObject {
         content.title = "Kullanım Süreniz Doldu"
         content.body = "Bugünkü kullanım süreniz \(formatTime(dailyLimitSeconds)) olarak ayarlanmıştı."
         
-        // Anında gönder
         let request = UNNotificationRequest(
             identifier: "dailyLimitReached",
             content: content,

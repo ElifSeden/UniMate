@@ -11,7 +11,6 @@ struct AppNotification: Identifiable {
 }
 
 struct NotificationsView: View {
-    // Örnek: 2 spam bildirim ile başlat
     @State private var notifications: [AppNotification] = [
         .init(id: "spam1",
               title: "SPAM: Hemen tıklayın!",
@@ -31,7 +30,7 @@ struct NotificationsView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Bildirimleri Aç/Kapat toggle
+            
             HStack {
                 Text("Bildirimleri Aç/Kapat")
                     .font(.subheadline)
@@ -40,13 +39,13 @@ struct NotificationsView: View {
                     .labelsHidden()
                     .onChange(of: isNotificationsEnabled) { newValue in
                         UserDefaults.standard.set(newValue, forKey: "isNotificationsEnabled")
-                        // UNUserNotificationCenter güncellemesini buraya ekle
+                       
                     }
             }
             .padding()
             .background(Color(.systemGray6))
 
-            // Uzun basınca çöp kutusu barı
+           
             if showDeleteBar {
                 HStack {
                     Spacer()
@@ -63,7 +62,6 @@ struct NotificationsView: View {
                 .background(Color(.systemGray6))
             }
 
-            // Bildirim listesi veya boş mesaj
             if notifications.isEmpty {
                 Spacer()
                 Text("Geçmiş bildiriminiz bulunmamaktadır")
@@ -108,7 +106,7 @@ struct NotificationsView: View {
         .navigationBarTitleDisplayMode(.inline)
         .navigationBarBackButtonHidden(true)
         .toolbar {
-            // Geri butonu
+        
             ToolbarItem(placement: .navigationBarLeading) {
                 Button {
                     dismiss()
@@ -119,14 +117,14 @@ struct NotificationsView: View {
                     }
                 }
             }
-            // Sağ üstte durum metni
+           
             ToolbarItem(placement: .navigationBarTrailing) {
                 Text(isNotificationsEnabled ? "Bildirim var" : "Bildirim yok")
                     .foregroundColor(.gray)
                     .font(.footnote)
             }
         }
-        // Silme onayı alert'i
+     
         .alert(
             "\(selectedNotifications.count) bildirim silmek istediğinize emin misiniz?",
             isPresented: $showDeleteAlert
@@ -154,10 +152,10 @@ struct NotificationsView: View {
                 return
             }
 
-            // Önce dokümanları al
+ 
             let docs = snapshot?.documents ?? []
 
-            // Ardından net bir [AppNotification] dizisine dönüştür
+            
             let fetched: [AppNotification] = docs.compactMap { doc in
                 let data = doc.data()
                 let title = data["title"] as? String ?? ""
@@ -171,7 +169,6 @@ struct NotificationsView: View {
                 )
             }
 
-            // Eğer gerçekten yeni bildirim geldiyse listeyi güncelle
             if !fetched.isEmpty {
                 notifications = fetched
             }

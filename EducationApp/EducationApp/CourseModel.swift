@@ -18,7 +18,6 @@ struct Course: Identifiable {
     }
 }
 
-// Sadece burada tanımlı olsun. Başka dosyada TANIMLAMA!
 let sampleCourses: [Course] = [
     Course(name: "CMPE 223", day: "Wednesday", hour: 10, location: "D832", color: .yellow),
     Course(name: "PHYS 102", day: "Wednesday", hour: 11, location: "DB106", color: .red),

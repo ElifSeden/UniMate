@@ -16,7 +16,7 @@ struct AddNewCourseView: View {
     var body: some View {
         NavigationView {
             VStack(alignment: .leading, spacing: 20) {
-                // Üst
+             
                 HStack {
                     Button("Kapat") {
                         dismiss()
@@ -34,13 +34,13 @@ struct AddNewCourseView: View {
                     .foregroundColor(.gray)
 
                 VStack(spacing: 15) {
-                    // Ders adı
+                 
                     TextField("Ders/Konu", text: $name)
                         .padding()
                         .background(Color(UIColor.systemGray6))
                         .cornerRadius(12)
 
-                    // GÜN Seçimi
+                   
                     Menu {
                         ForEach(days, id: \.self) { day in
                             Button(action: {
@@ -63,7 +63,6 @@ struct AddNewCourseView: View {
                         .cornerRadius(12)
                     }
 
-                    // SAAT Seçimi
                     Menu {
                         ForEach(hours, id: \.self) { hour in
                             Button(action: {
@@ -86,13 +85,13 @@ struct AddNewCourseView: View {
                         .cornerRadius(12)
                     }
 
-                    // Yer
+                   
                     TextField("Yer (isteğe bağlı)", text: $location)
                         .padding()
                         .background(Color(UIColor.systemGray6))
                         .cornerRadius(12)
 
-                    // Kaydet Butonu
+                   
                     Button(action: {
                         let newCourse = Course(
                             name: name,

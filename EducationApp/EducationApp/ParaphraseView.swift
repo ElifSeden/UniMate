@@ -11,7 +11,6 @@ struct ParaphraseView: View {
         NavigationView {
             VStack(spacing: 20) {
 
-                // 🔶 Başlık kutusu (ortalanmış)
                 VStack(alignment: .center, spacing: 4) {
                     Text("Paraphrase")
                         .font(.title.bold())

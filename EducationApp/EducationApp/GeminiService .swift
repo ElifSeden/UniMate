@@ -1,13 +1,13 @@
 import Foundation
 
 class GeminiService {
-    // ✅ Ortak erişim noktası (singleton)
+   
     static let shared = GeminiService()
 
-    // ✅ API anahtarı
-    private let apiKey = ""
+    //API anahtarı
+    private let apiKey = "***REMOVED***"
 
-    // ✅ AI metin üretimi
+    
     func generateText(from prompt: String, completion: @escaping (String?) -> Void) {
         guard let url = URL(string:
             "https://generativelanguage.googleapis.com/v1/models/gemini-1.5-pro:generateContent?key=\(apiKey)")

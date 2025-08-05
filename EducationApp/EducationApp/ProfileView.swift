@@ -12,6 +12,7 @@ struct ProfileView: View {
     @State private var department = ""
     @State private var selectedCountry = ""
     @State private var birthday = Date()
+    
     @State private var showValidationAlert = false
     @State private var showSavedAlert = false
 
@@ -27,6 +28,7 @@ struct ProfileView: View {
         "Slovakya","Slovenya","Ukrayna","Vatikan","Türkiye","Diğer"
     ]
 
+    
     private var isFormValid: Bool {
         !name.trimmingCharacters(in: .whitespaces).isEmpty &&
         !surname.trimmingCharacters(in: .whitespaces).isEmpty &&
@@ -37,65 +39,80 @@ struct ProfileView: View {
     }
 
     var body: some View {
-        NavigationView {
-            Form {
-                Section(header: Text("Hesap Bilgileri")) {
-                    TextField("Adınız", text: $name)
-                    TextField("Soyadınız", text: $surname)
-                    TextField("Telefon Numarası", text: $phone)
-                        .keyboardType(.phonePad)
-                }
+        Form {
+            Section(header: Text("Hesap Bilgileri")) {
+                TextField("Adınız", text: $name)
+                TextField("Soyadınız", text: $surname)
+                TextField("Telefon Numarası", text: $phone)
+                    .keyboardType(.phonePad)
+            }
 
-                Section(header: Text("Eğitim Bilgileri")) {
-                    TextField("Üniversite", text: $universityName)
-                    TextField("Bölüm", text: $department)
-                }
+            Section(header: Text("Eğitim Bilgileri")) {
+                TextField("Üniversite", text: $universityName)
+                TextField("Bölüm", text: $department)
+            }
 
-                Section(header: Text("Kişisel Bilgiler")) {
-                    Picker("Ülke", selection: $selectedCountry) {
-                        Text("Ülke seçin").tag("")
-                        ForEach(countries, id: \.self) { country in
-                            Text(country).tag(country)
-                        }
+            Section(header: Text("Kişisel Bilgiler")) {
+                Picker("Ülke", selection: $selectedCountry) {
+                    Text("Ülke seçin").tag("")
+                    ForEach(countries, id: \.self) { country in
+                        Text(country).tag(country)
                     }
-                    .pickerStyle(MenuPickerStyle())
-
-                    DatePicker("Doğum Tarihi", selection: $birthday, displayedComponents: .date)
                 }
+                .pickerStyle(MenuPickerStyle())
 
-                Section {
-                    Button("Kaydet") {
-                        if isFormValid {
-                            saveProfile()
-                        } else {
-                            showValidationAlert = true
-                        }
+                DatePicker("Doğum Tarihi", selection: $birthday, displayedComponents: .date)
+            }
+
+            Section {
+                Button("Kaydet") {
+                    if isFormValid {
+                        saveProfile()
+                    } else {
+                        showValidationAlert = true
                     }
-                    .foregroundColor(.blue)
+                }
+                .foregroundColor(.blue)
+            }
+        }
+       
+        .navigationTitle("Profilim")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                        Text("Geri")
+                    }
                 }
             }
-            .navigationTitle("Profilim")
-            .navigationBarTitleDisplayMode(.inline)
-            .alert("Lütfen tüm alanları eksiksiz doldurun.", isPresented: $showValidationAlert) {
-                Button("Tamam", role: .cancel) { }
-            }
-            .alert(
-                "Bilgiler başarıyla kaydedildi",
-                isPresented: $showSavedAlert,
-                actions: {
-                    Button("Tamam") {
-                        selectedTab = 0
-                        dismiss()
-                    }
-                },
-                message: { Text("Profil bilgileriniz güncellendi.") }
-            )
-            .onAppear {
-                loadProfile() // ✅ Kayıtlı bilgileri geri yükle
-            }
+        }
+        
+        .alert("Lütfen tüm alanları eksiksiz doldurun.", isPresented: $showValidationAlert) {
+            Button("Tamam", role: .cancel) { }
+        }
+      
+        .alert(
+            "Bilgiler başarıyla kaydedildi",
+            isPresented: $showSavedAlert,
+            actions: {
+                Button("Tamam") {
+                    selectedTab = 0
+                    dismiss()
+                }
+            },
+            message: { Text("Profil bilgileriniz güncellendi.") }
+        )
+        .onAppear {
+            loadProfile()
         }
     }
 
+   
     private func saveProfile() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
 
@@ -110,30 +127,47 @@ struct ProfileView: View {
             "email": Auth.auth().currentUser?.email ?? ""
         ]
 
-        Firestore.firestore().collection("users").document(uid).setData(data) { error in
-            if let error = error {
-                print("❌ Kaydetme hatası: \(error.localizedDescription)")
-            } else {
-                showSavedAlert = true
+        Firestore.firestore()
+            .collection("users")
+            .document(uid)
+            .setData(data) { error in
+                if let error = error {
+                    print("❌ Kaydetme hatası: \(error.localizedDescription)")
+                } else {
+                    showSavedAlert = true
+                }
             }
-        }
     }
 
+    
     private func loadProfile() {
         guard let uid = Auth.auth().currentUser?.uid else { return }
 
-        Firestore.firestore().collection("users").document(uid).getDocument { snapshot, error in
-            if let data = snapshot?.data() {
+        Firestore.firestore()
+            .collection("users")
+            .document(uid)
+            .getDocument { snapshot, error in
+                guard let data = snapshot?.data() else { return }
                 self.name = data["name"] as? String ?? ""
                 self.surname = data["surname"] as? String ?? ""
                 self.phone = data["phone"] as? String ?? ""
                 self.universityName = data["universityName"] as? String ?? ""
                 self.department = data["department"] as? String ?? ""
                 self.selectedCountry = data["country"] as? String ?? ""
-                if let timestamp = data["birthday"] as? Timestamp {
-                    self.birthday = timestamp.dateValue()
+                if let ts = data["birthday"] as? Timestamp {
+                    self.birthday = ts.dateValue()
                 }
             }
+    }
+}
+
+#if DEBUG
+struct ProfileView_Previews: PreviewProvider {
+    @State static var tab = 4
+    static var previews: some View {
+        NavigationStack {
+            ProfileView(selectedTab: $tab)
         }
     }
 }
+#endif

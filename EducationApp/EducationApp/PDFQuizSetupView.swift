@@ -7,7 +7,6 @@ struct PDFQuizSetupView: View {
     @State private var selectedType = "Çoktan Seçmeli"
     @State private var selectedCount = 5
 
-    // ✅ Klasik tipi eklendi
     let types = ["Çoktan Seçmeli", "Boşluk Doldurma", "Klasik"]
     let counts = [5, 10, 15, 20]
 

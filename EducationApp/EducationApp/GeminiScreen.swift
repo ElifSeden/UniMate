@@ -23,7 +23,7 @@ struct GeminiScreen: View {
         ZStack {
             NavigationView {
                 VStack(spacing: 0) {
-                    // ✅ PDF ekranı gibi tam mavi üst bar
+                  
                     ZStack(alignment: .bottom) {
                         Color.blue
                             .edgesIgnoringSafeArea(.top)
@@ -36,7 +36,6 @@ struct GeminiScreen: View {
                     }
                     .frame(height: 80)
 
-                    // 🔹 Scroll içeriği
                     ScrollView {
                         VStack(spacing: 12) {
                             ForEach(sampleQuestions, id: \.self) { question in
@@ -61,8 +60,6 @@ struct GeminiScreen: View {
                 }
                 .navigationBarHidden(true)
             }
-
-            // 🔘 Yuvarlak mesaj ikonlu buton
             VStack {
                 Spacer()
                 HStack {
@@ -81,8 +78,7 @@ struct GeminiScreen: View {
                     .padding()
                 }
             }
-
-            // 💬 Sağdan açılan chat kutusu
+            
             if isChatOpen {
                 VStack {
                     Spacer()

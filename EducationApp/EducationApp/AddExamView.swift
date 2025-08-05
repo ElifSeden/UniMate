@@ -15,7 +15,7 @@ struct AddExamView: View {
         NavigationView {
             VStack(alignment: .leading, spacing: 20) {
                 
-                // Kapat Butonu
+             
                 HStack {
                     Button("Kapat") {
                         presentationMode.wrappedValue.dismiss()
@@ -25,7 +25,7 @@ struct AddExamView: View {
                     Spacer()
                 }
 
-                // Başlık
+          
                 Text("Sınav Ekle")
                     .font(.largeTitle.bold())
 
@@ -33,7 +33,7 @@ struct AddExamView: View {
                     .font(.headline)
                     .foregroundColor(.gray)
 
-                // Alanlar
+             
                 VStack(spacing: 16) {
                     TextField("Ders/Konu", text: $subject)
                         .padding()
@@ -51,7 +51,6 @@ struct AddExamView: View {
                         .cornerRadius(12)
                 }
 
-                // Kaydet Butonu (Gradientli)
                 Button(action: {
                     let newExam = Exam(subject: subject, date: selectedDate, note: note)
                     saveExamToFirestore(newExam)

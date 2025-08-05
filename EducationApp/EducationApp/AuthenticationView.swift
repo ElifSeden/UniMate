@@ -29,7 +29,7 @@ struct AuthenticationView: View {
                     if isLoginMode {
                         // Giriş fonksiyonu eklenecek
                     } else {
-                        // Kayıt fonksiyonu eklenecek
+                        // Kayıt fonksiyonu eklenece
                     }
                 }) {
                     Text(isLoginMode ? "Giriş Yap" : "Üye Ol")

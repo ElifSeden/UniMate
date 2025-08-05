@@ -12,7 +12,7 @@ struct AIDetectorView: View {
         ScrollView {
             VStack(spacing: 20) {
 
-                // 🔙 Kapat + Başlık Kutusu (MoodCheck tarzı)
+               
                 HStack {
                     Button("Kapat") {
                         dismiss()
@@ -37,7 +37,6 @@ struct AIDetectorView: View {
                 .cornerRadius(20)
                 .padding(.horizontal)
 
-                // 📝 Metin Girişi Kutusu
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Metni Yapıştırın")
                         .font(.headline)
@@ -58,17 +57,8 @@ struct AIDetectorView: View {
                 .shadow(color: .gray.opacity(0.2), radius: 3)
                 .padding(.horizontal)
 
-                // 📎 Butonlar
+               
                 HStack {
-                    Button(action: {
-                        showFileImporter = true
-                    }) {
-                        Label("Dosya Yükle", systemImage: "doc.fill")
-                    }
-                    .buttonStyle(.bordered)
-
-                    Spacer()
-
                     Button(action: detectAI) {
                         Text("AI Tespiti Yap")
                     }
@@ -77,13 +67,13 @@ struct AIDetectorView: View {
                 }
                 .padding(.horizontal)
 
-                // ⏳ Yükleniyor
+           
                 if isLoading {
                     ProgressView("AI analiz ediliyor...")
                         .padding()
                 }
 
-                // ✅ Sonuçlar
+          
                 if let result = detectedResult {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Sonuçlar")

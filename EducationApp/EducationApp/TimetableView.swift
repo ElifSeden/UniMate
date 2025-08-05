@@ -6,7 +6,6 @@ struct TimetableView: View {
 
     var body: some View {
         VStack(spacing: 16) {
-            // Başlık
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Weekly Schedule")
@@ -28,7 +27,6 @@ struct TimetableView: View {
             }
             .padding(.horizontal)
 
-            // Ders Tablosu
             GridTimetableView(courses: $courses)
 
                 .padding(.horizontal)
@@ -36,7 +34,6 @@ struct TimetableView: View {
             Spacer()
         }
         .sheet(isPresented: $showingAddCourse) {
-            // ✅ Burayı değiştirdik
             AddNewCourseView { newCourse in
                 courses.append(newCourse)
             }

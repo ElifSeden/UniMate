@@ -25,11 +25,9 @@ struct PDFSummaryView: View {
     var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // HEADER with centered title and left-aligned buttons
                 ZStack {
                     Color.blue.ignoresSafeArea(edges: .top)
 
-                    // Centered title
                     HStack(spacing: 8) {
                         Image(systemName: "doc.text")
                             .font(.title2)
@@ -39,25 +37,9 @@ struct PDFSummaryView: View {
                             .foregroundColor(.white)
                     }
 
-                    // Left-aligned buttons: Back & Play/Stop (hidden until summary)
                     HStack(spacing: 16) {
                         if summary != nil {
                             Button {
-                                // Back action
-                                selectedDocumentURL = nil
-                                summary = nil
-                                isLoading = false
-                                showError = false
-                                synthesizer.stopSpeaking(at: .immediate)
-                                isSpeaking = false
-                                presentationMode.wrappedValue.dismiss()
-                            } label: {
-                                Image(systemName: "chevron.left")
-                                    .font(.title2)
-                                    .foregroundColor(.white)
-                            }
-                            Button {
-                                // Play/Stop action
                                 if isSpeaking {
                                     synthesizer.stopSpeaking(at: .immediate)
                                     isSpeaking = false
@@ -72,6 +54,17 @@ struct PDFSummaryView: View {
                                     .font(.title2)
                                     .foregroundColor(.white)
                             }
+                            Button {
+                                selectedDocumentURL = nil
+                                summary = nil
+                                isLoading = false
+                                showError = false
+                                presentationMode.wrappedValue.dismiss()
+                            } label: {
+                                Image(systemName: "chevron.left")
+                                    .font(.title2)
+                                    .foregroundColor(.white)
+                            }
                         }
                         Spacer()
                     }
@@ -81,7 +74,6 @@ struct PDFSummaryView: View {
 
                 Divider()
 
-                // CONTENT
                 ScrollView {
                     VStack(alignment: .leading, spacing: 16) {
                         if let url = selectedDocumentURL {
@@ -128,7 +120,6 @@ struct PDFSummaryView: View {
 
                 Divider()
 
-                // FOOTER: Özet Çıkar + + Buttons
                 HStack(spacing: 16) {
                     Button("Özet Çıkar") {
                         guard let url = selectedDocumentURL else { return }
@@ -182,7 +173,6 @@ struct PDFSummaryView: View {
         }
     }
 
-    // MARK: - Parça Parça Metin Çıkar
     private func extractChunks(from url: URL, chunkSize: Int = 5) -> [String] {
         guard let doc = PDFDocument(url: url) else { return [] }
         var chunks: [String] = []
@@ -199,7 +189,6 @@ struct PDFSummaryView: View {
         return chunks
     }
 
-    // MARK: - Gemini ile Parça Parça Özetle
     private func summarizeChunks(_ chunks: [String], completion: @escaping (String) -> Void) {
         var fullSummary = ""
         let group = DispatchGroup()

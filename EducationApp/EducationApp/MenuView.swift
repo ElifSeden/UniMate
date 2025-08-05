@@ -3,12 +3,11 @@ import FirebaseAuth
 
 struct MenuView: View {
     @Binding var selectedTab: Int
-    @Environment(\.presentationMode) private var presentationMode
-    @EnvironmentObject var authViewModel: AuthViewModel  // ✅ Eklendi
+    @Environment(\.dismiss) private var dismiss
+    @EnvironmentObject var authViewModel: AuthViewModel
 
     var body: some View {
         List {
-            // ✅ 1. Profilim
             NavigationLink {
                 ProfileView(selectedTab: $selectedTab)
             } label: {
@@ -26,11 +25,10 @@ struct MenuView: View {
                 .padding(.vertical, 6)
             }
 
-            // ✅ 2. Ayarlar
             NavigationLink {
                 SettingsView()
-                Text("Ayarlar Ekranı")
                     .navigationTitle("Ayarlar")
+                    .navigationBarTitleDisplayMode(.inline)
             } label: {
                 HStack(spacing: 16) {
                     Image(systemName: "gear")
@@ -46,12 +44,11 @@ struct MenuView: View {
                 .padding(.vertical, 6)
             }
 
-            // ✅ 3. Çıkış Yap
             Section {
                 Button(role: .destructive) {
-                    authViewModel.signOut()                  // ✅ Firebase çıkışı
-                    selectedTab = 0                          // ✅ Ana sayfaya dön
-                    presentationMode.wrappedValue.dismiss() // ✅ Menüden çık
+                    authViewModel.signOut()
+                    selectedTab = 0
+                    dismiss()
                 } label: {
                     HStack {
                         Image(systemName: "arrow.backward.circle.fill")
@@ -64,5 +61,33 @@ struct MenuView: View {
                 }
             }
         }
+        .listStyle(.insetGrouped)
+        .navigationTitle("Menü")
+        .navigationBarTitleDisplayMode(.inline)
+        .navigationBarBackButtonHidden(true)
+        .toolbar {
+            ToolbarItem(placement: .navigationBarLeading) {
+                Button {
+                    dismiss()
+                } label: {
+                    HStack(spacing: 4) {
+                        Image(systemName: "chevron.left")
+                        Text("Geri")
+                    }
+                }
+            }
+        }
     }
 }
+
+#if DEBUG
+struct MenuView_Previews: PreviewProvider {
+    @State static var tab = 0
+    static var previews: some View {
+        NavigationStack {
+            MenuView(selectedTab: $tab)
+                .environmentObject(AuthViewModel())
+        }
+    }
+}
+#endif
